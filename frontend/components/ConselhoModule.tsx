@@ -165,18 +165,18 @@ export default function ConselhoModule() {
 
     const handleDeliberationChange = (pId: string, field: keyof Conselho, value: any) => {
         setLocalConselhos(prev => {
-            const existing = prev.find(c => c.protagonistaId === pId && c.ano === configuracao.anoLetivo);
+            const existing = prev.find(c => c.protagonistaId === pId && String(c.ano) === String(configuracao.anoLetivo));
             if (existing) {
                 return prev.map(c => (c === existing ? { ...c, [field]: value } : c));
             } else {
                 const nw: Conselho = {
                     id: newId(),
                     protagonistaId: pId,
-                    ano: configuracao.anoLetivo,
+                    ano: String(configuracao.anoLetivo),
                     resultadoManual: 'Aprovado',
                     deliberado: false,
-                    ...({ [field]: value })
                 };
+                (nw as any)[field] = value;
                 return [...prev, nw];
             }
         });
@@ -612,7 +612,7 @@ export default function ConselhoModule() {
                             </thead>
                             <tbody>
                                 {turmaProts.map((p, idx) => {
-                                    const conselho = localConselhos.find(c => c.protagonistaId === p.id && c.ano === configuracao.anoLetivo);
+                                    const conselho = localConselhos.find(c => c.protagonistaId === p.id && String(c.ano) === String(configuracao.anoLetivo));
                                     const isDeliberado = conselho?.deliberado || false;
 
                                     // Compute per-student summary
