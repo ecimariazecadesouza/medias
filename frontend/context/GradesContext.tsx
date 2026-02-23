@@ -137,13 +137,16 @@ export function GradesProvider({ children }: { children: React.ReactNode }) {
             const lans = safeLancamentos.filter(l => {
                 if (l?.protagonistaId !== protagonistaId || l?.disciplinaId !== disciplinaId) return false;
                 if (!relevantBims.includes(l?.bimestre as any)) return false;
-                if (l?.media === null || l?.media === undefined) return false;
 
-                // Se a nota for 0, só contamos se o bimestre estiver fechado ou se for o 4º bimestre
-                // (Para evitar que 0s de placeholder arrastem a média para baixo)
-                if (l?.media === 0) {
-                    const bimConfig = configuracao?.bimestres?.find(b => b.numero === l.bimestre);
-                    if (bimConfig?.fechado || l.bimestre === 4) return true;
+                const m = l?.media;
+                if (m === null || m === undefined || (m as any) === '') return false;
+
+                const val = Number(m);
+                // Se a nota for 0, só contamos se o bimestre estiver fechado
+                if (val === 0) {
+                    const bNum = Number(l.bimestre);
+                    const bimConfig = configuracao?.bimestres?.find(b => b.numero === bNum);
+                    if (bimConfig?.fechado) return true;
                     return false;
                 }
 
@@ -166,18 +169,25 @@ export function GradesProvider({ children }: { children: React.ReactNode }) {
             if (mg >= 6.0) return mg;
 
             const safeLancamentos = lancamentos || [];
-            const rf = safeLancamentos.find(l =>
+            const rflan = safeLancamentos.find(l =>
                 l?.protagonistaId === protagonistaId &&
                 l?.disciplinaId === disciplinaId &&
                 l?.bimestre === 5
-            )?.media;
+            );
 
-            if (rf === null || rf === undefined) return null;
+            const rf = rflan?.media;
+            if (rf === null || rf === undefined || (rf as any) === '') return null;
+
+            // Se RF for 0, só contamos se o 4º bimestre estiver fechado (indica fim do ano)
+            if (Number(rf) === 0) {
+                const b4Config = configuracao?.bimestres?.find(b => b.numero === 4);
+                if (!b4Config?.fechado) return null;
+            }
 
             // Nova regra MF: (MG * 6 + NotaRec * 4) / 10
-            const mf = (mg * 6 + rf * 4) / 10;
+            const mf = (mg * 6 + Number(rf) * 4) / 10;
             return Math.floor(mf * 10) / 10;
-        }, [getMG, lancamentos]);
+        }, [getMG, lancamentos, configuracao]);
 
     const getSituacao = useCallback(
         (protagonistaId: string, disciplinaId: string): 'Aprovado' | 'Aprovar' | 'Reprovado' | 'Recuperação' | 'Retido' | 'Pendente' | 'Inapto' | 'Cursando' | 'Em curso' => {
@@ -187,12 +197,15 @@ export function GradesProvider({ children }: { children: React.ReactNode }) {
             const regularLans = (Array.isArray(lancamentos) ? lancamentos : []).filter(l => {
                 if (l?.protagonistaId !== protagonistaId || l?.disciplinaId !== disciplinaId) return false;
                 if (!l?.bimestre || l.bimestre > 4) return false;
-                if (l?.media === null || l?.media === undefined) return false;
 
+                const m = l?.media;
+                if (m === null || m === undefined || (m as any) === '') return false;
+
+                const val = Number(m);
                 // Aplicar a mesma regra de ignorar 0s de placeholder
-                if (l?.media === 0) {
+                if (val === 0) {
                     const bimConfig = configuracao?.bimestres?.find(b => b.numero === l.bimestre);
-                    if (bimConfig?.fechado || l.bimestre === 4) return true;
+                    if (bimConfig?.fechado) return true;
                     return false;
                 }
                 return true;

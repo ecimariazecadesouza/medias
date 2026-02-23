@@ -62,9 +62,29 @@ export default function BoletinsModule() {
         return false;
     };
 
-    const formatMedia = (m: any) => (m !== null && m !== undefined) ? Number(m).toFixed(1) : '—';
-    const situacaoColor = (m: any) =>
-        (m === null || m === undefined) ? '#999' : Number(m) >= (mediaMinima || 6.0) ? 'hsl(142 71% 35%)' : 'hsl(0 80% 55%)';
+    const formatMedia = (m: any, bim?: number) => {
+        if (m === null || m === undefined || (m as any) === '') return '—';
+        const val = Number(m);
+        if (val === 0 && bim && bim >= 1 && bim <= 4) {
+            const bimConfig = configuracao?.bimestres?.find(b => b.numero === bim);
+            if (!bimConfig?.fechado) return '—';
+        }
+        if (val === 0 && bim === 5) {
+            const bim4Config = configuracao?.bimestres?.find(b => b.numero === 4);
+            if (!bim4Config?.fechado) return '—';
+        }
+        return val.toFixed(1);
+    };
+    const situacaoColor = (m: any, bim?: number) => {
+        if (m === null || m === undefined || (m as any) === '') return '#999';
+        const val = Number(m);
+        const bimRef = bim === 5 ? 4 : bim;
+        if (val === 0 && bimRef) {
+            const bimConfig = configuracao?.bimestres?.find(b => b.numero === bimRef);
+            if (!bimConfig?.fechado) return '#999';
+        }
+        return val >= (mediaMinima || 6.0) ? 'hsl(142 71% 35%)' : 'hsl(0 80% 55%)';
+    };
 
     const handlePrint = () => window.print();
 
@@ -150,10 +170,10 @@ export default function BoletinsModule() {
             doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(15, 23, 42);
             doc.text((d.nome || '').substring(0, 35), colX.disc, y + 5);
             doc.setFontSize(8);
-            doc.text(formatMedia(b1), colX.b1 + 3, y + 5, { align: 'center' });
-            doc.text(formatMedia(b2), colX.b2 + 3, y + 5, { align: 'center' });
-            doc.text(formatMedia(b3), colX.b3 + 3, y + 5, { align: 'center' });
-            doc.text(formatMedia(b4), colX.b4 + 3, y + 5, { align: 'center' });
+            doc.text(formatMedia(b1, 1), colX.b1 + 3, y + 5, { align: 'center' });
+            doc.text(formatMedia(b2, 2), colX.b2 + 3, y + 5, { align: 'center' });
+            doc.text(formatMedia(b3, 3), colX.b3 + 3, y + 5, { align: 'center' });
+            doc.text(formatMedia(b4, 4), colX.b4 + 3, y + 5, { align: 'center' });
             doc.text(mgValue !== null ? mgValue.toFixed(1) : '—', colX.mg + 3, y + 5, { align: 'center' });
             doc.setFont('helvetica', 'bold'); doc.text(formatMedia(mfValue), colX.mf + 3, y + 5, { align: 'center' });
             doc.setFont('helvetica', 'normal'); doc.setFontSize(6);
@@ -362,15 +382,15 @@ export default function BoletinsModule() {
                                                             padding: '0.875rem 0.5rem',
                                                             textAlign: 'center',
                                                             fontWeight: 600,
-                                                            color: disabled ? 'transparent' : situacaoColor(m),
+                                                            color: disabled ? 'transparent' : situacaoColor(m, b as any),
                                                             background: disabled ? 'hsl(var(--muted)/0.1)' : 'transparent'
                                                         }}>
-                                                            {disabled ? '' : formatMedia(m)}
+                                                            {disabled ? '' : formatMedia(m, b as any)}
                                                         </td>
                                                     );
                                                 })}
-                                                <td style={{ padding: '0.875rem 0.5rem', textAlign: 'center', fontWeight: 600, color: situacaoColor(rf) }}>
-                                                    {formatMedia(rf)}
+                                                <td style={{ padding: '0.875rem 0.5rem', textAlign: 'center', fontWeight: 600, color: situacaoColor(rf, 5) }}>
+                                                    {formatMedia(rf, 5)}
                                                 </td>
                                                 <td style={{ padding: '0.875rem 0.75rem', textAlign: 'center', fontWeight: 900, fontSize: '1rem', color: situacaoColor(mf ?? mg), background: 'hsl(var(--primary)/0.03)' }}>
                                                     {formatMedia(mf ?? mg)}

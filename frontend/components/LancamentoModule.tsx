@@ -238,10 +238,24 @@ export default function LancamentoModule({ readOnly = false, role, userEmail }: 
         const g4 = getGrade(4);
         const rf = getGrade(5);
 
-        const filled = [g1, g2, g3, g4].filter(x => x !== null) as number[];
-        const pts = [g1, g2, g3, g4].reduce((acc: number, v) => acc + (v || 0), 0);
+        const getValidGrades = () => {
+            const result: number[] = [];
+            [1, 2, 3, 4].forEach(bNum => {
+                const val = getGrade(bNum);
+                if (val === null) return;
+                if (val === 0) {
+                    const bimConfig = configuracao?.bimestres?.find(b => b.numero === bNum);
+                    if (!bimConfig?.fechado) return;
+                }
+                result.push(val);
+            });
+            return result;
+        };
 
-        // MG institucional: média das notas lançadas
+        const filled = getValidGrades();
+        const pts = filled.reduce((acc, v) => acc + v, 0);
+
+        // MG institucional: média das notas válidas
         const mg = filled.length > 0 ? Math.floor((pts / filled.length) * 10) / 10 : null;
 
         // Tabela Precisa

@@ -106,8 +106,17 @@ export default function ConselhoModule() {
         const safeLancamentos = lancamentos || [];
         const discLans = safeLancamentos.filter(l => l?.protagonistaId === pId && l?.disciplinaId === dId);
         const regularLans = discLans.filter(l => l?.bimestre >= 1 && l?.bimestre <= bimRef);
-        const sum = regularLans.reduce((acc, l) => acc + (l?.media || 0), 0);
-        const filled = regularLans.filter(l => l?.media !== null && l?.media !== undefined);
+        const filled = regularLans.filter(l => {
+            const m = l?.media;
+            if (m === null || m === undefined || (m as any) === '') return false;
+            if (Number(m) === 0) {
+                const bimConfig = configuracao?.bimestres?.find(b => b.numero === l.bimestre);
+                if (!bimConfig?.fechado) return false;
+            }
+            return true;
+        });
+
+        const sum = filled.reduce((acc, l) => acc + Number(l.media), 0);
         const filledCount = filled.length;
 
         let mf: number | null = null;
@@ -117,7 +126,13 @@ export default function ConselhoModule() {
             mf = Math.floor(mg * 10) / 10;
         } else {
             const mgFinal = Math.floor((sum / 4) * 10) / 10;
-            const rf = discLans.find(l => l.bimestre === 5)?.media ?? null;
+            const rflan = discLans.find(l => l.bimestre === 5);
+            let rf = (rflan?.media !== null && rflan?.media !== undefined && (rflan?.media as any) !== '') ? Number(rflan?.media) : null;
+            if (rf === 0) {
+                const b4Config = configuracao?.bimestres?.find(b => b.numero === 4);
+                if (!b4Config?.fechado) rf = null;
+            }
+
             if (mgFinal >= mediaMinima) {
                 mf = mgFinal;
             } else if (rf !== null) {
