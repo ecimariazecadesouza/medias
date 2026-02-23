@@ -67,15 +67,17 @@ export default function AnalysesModule() {
     const reprovados = filteredLans.filter(l => (l.media ?? 0) < mediaMinima).length;
     const pctAprovacao = totalLancamentos > 0 ? ((aprovados / totalLancamentos) * 100).toFixed(1) : '0.0';
     const mediaGeral = totalLancamentos > 0
-        ? (filteredLans.reduce((s, l) => s + (l.media ?? 0), 0) / totalLancamentos).toFixed(2)
+        ? (filteredLans.reduce((s, l) => s + Number(l.media ?? 0), 0) / totalLancamentos).toFixed(1)
         : '—';
 
     // Media por disciplina
     const mediasByDisciplina = useMemo(() => {
         const map: Record<string, { sum: number; count: number; nome: string }> = {};
         filteredLans.forEach(l => {
-            map[l.disciplinaId] = { sum: 0, count: 0, nome: l?.disciplinaNome || safeDisciplinas.find(d => d?.id === l?.disciplinaId)?.nome || l?.disciplinaId };
-            map[l.disciplinaId].sum += l.media ?? 0;
+            if (!map[l.disciplinaId]) {
+                map[l.disciplinaId] = { sum: 0, count: 0, nome: l?.disciplinaNome || safeDisciplinas.find(d => d?.id === l?.disciplinaId)?.nome || l?.disciplinaId };
+            }
+            map[l.disciplinaId].sum += Number(l.media ?? 0);
             map[l.disciplinaId].count++;
         });
         return Object.entries(map)
@@ -89,7 +91,7 @@ export default function AnalysesModule() {
             const lans = filteredLans.filter(l => l.bimestre === b);
             return {
                 bimestre: b,
-                media: lans.length > 0 ? lans.reduce((s, l) => s + (l.media ?? 0), 0) / lans.length : null,
+                media: lans.length > 0 ? lans.reduce((s, l) => s + Number(l.media ?? 0), 0) / lans.length : null,
                 count: lans.length
             };
         });
@@ -105,7 +107,7 @@ export default function AnalysesModule() {
                     const area = safeAreas.find(a => a.id === h.areaId);
                     map[h.areaId] = { sum: 0, count: 0, nome: area?.nome || h.areaId };
                 }
-                map[h.areaId].sum += l.media ?? 0;
+                map[h.areaId].sum += Number(l.media ?? 0);
                 map[h.areaId].count++;
             }
         });
@@ -118,8 +120,10 @@ export default function AnalysesModule() {
     const mediasByTurma = useMemo(() => {
         const map: Record<string, { sum: number; count: number; nome: string }> = {};
         filteredLans.forEach(l => {
-            map[l.turmaId] = { sum: 0, count: 0, nome: l?.turmaNome || safeTurmas.find(t => t?.id === l?.turmaId)?.nome || l?.turmaId };
-            map[l.turmaId].sum += l.media ?? 0;
+            if (!map[l.turmaId]) {
+                map[l.turmaId] = { sum: 0, count: 0, nome: l?.turmaNome || safeTurmas.find(t => t?.id === l?.turmaId)?.nome || l?.turmaId };
+            }
+            map[l.turmaId].sum += Number(l.media ?? 0);
             map[l.turmaId].count++;
         });
         return Object.entries(map).map(([id, { sum, count, nome }]) => ({ id, nome, media: sum / count })).sort((a, b) => b.media - a.media);
@@ -321,7 +325,7 @@ export default function AnalysesModule() {
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem' }}>
                                         <span>{a.nome}</span>
                                         <span style={{ color: a.media >= mediaMinima ? 'hsl(var(--accent))' : 'hsl(var(--danger))' }}>
-                                            {a.media.toFixed(2)}
+                                            {a.media.toFixed(1)}
                                         </span>
                                     </div>
                                     <SimpleBar value={a.media} max={10} color={a.media >= mediaMinima ? 'hsl(var(--accent))' : 'hsl(var(--danger))'} />
@@ -346,7 +350,7 @@ export default function AnalysesModule() {
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.25rem' }}>
                                         <span>{d.nome}</span>
                                         <span className={`badge ${d.media >= mediaMinima ? 'badge-green' : 'badge-red'}`} style={{ fontSize: '0.75rem' }}>
-                                            {d.media.toFixed(2)}
+                                            {d.media.toFixed(1)}
                                         </span>
                                     </div>
                                     <SimpleBar value={d.media} max={maxMedia} color={d.media >= mediaMinima ? 'hsl(var(--accent))' : 'hsl(var(--danger))'} />

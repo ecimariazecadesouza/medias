@@ -214,7 +214,7 @@ export default function BoletinsModule() {
     });
 
     const mediaGeral = mediasDiscs && mediasDiscs.filter(x => x.media !== null).length > 0
-        ? (mediasDiscs.filter(x => x.media !== null).reduce((s, x) => s + (x.media ?? 0), 0) / mediasDiscs.filter(x => x.media !== null).length)
+        ? (mediasDiscs.filter(x => x.media !== null).reduce((s, x) => s + Number(x.media ?? 0), 0) / mediasDiscs.filter(x => x.media !== null).length)
         : null;
 
     const situacaoGeral = mediaGeral !== null ? (mediaGeral >= 5.0 ? 'Aprovado' : 'Reprovado') : '—';
@@ -421,7 +421,7 @@ export default function BoletinsModule() {
                             <div style={{ display: 'flex', gap: '2rem' }}>
                                 <div>
                                     <div style={{ fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))' }}>Média Geral</div>
-                                    <div style={{ fontSize: '1.5rem', fontWeight: 900, color: situacaoColor(mediaGeral) }}>{mediaGeral?.toFixed(2) || '—'}</div>
+                                    <div style={{ fontSize: '1.5rem', fontWeight: 900, color: situacaoColor(mediaGeral) }}>{mediaGeral?.toFixed(1) || '—'}</div>
                                 </div>
                                 <div>
                                     <div style={{ fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))' }}>Aproveitamento</div>
