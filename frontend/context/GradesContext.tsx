@@ -134,18 +134,25 @@ export function GradesProvider({ children }: { children: React.ReactNode }) {
             if (!disc) return null;
 
             const relevantBims = [1, 2, 3, 4];
-            const lans = (Array.isArray(safeLancamentos) ? safeLancamentos : []).filter(
-                l => l?.protagonistaId === protagonistaId &&
-                    l?.disciplinaId === disciplinaId &&
-                    relevantBims.includes(l?.bimestre as any) &&
-                    l?.media !== null
-            );
+            const lans = safeLancamentos.filter(l => {
+                if (l?.protagonistaId !== protagonistaId || l?.disciplinaId !== disciplinaId) return false;
+                if (!relevantBims.includes(l?.bimestre as any)) return false;
+                if (l?.media === null || l?.media === undefined) return false;
+
+                // Se a nota for 0, só contamos se o bimestre estiver fechado ou se for o 4º bimestre
+                // (Para evitar que 0s de placeholder arrastem a média para baixo)
+                if (l?.media === 0) {
+                    const bimConfig = configuracao?.bimestres?.find(b => b.numero === l.bimestre);
+                    if (bimConfig?.fechado || l.bimestre === 4) return true;
+                    return false;
+                }
+
+                return true;
+            });
 
             if (!lans.length) return null;
             const sum = lans.reduce((acc, l) => acc + (l?.media ?? 0), 0);
 
-            // Regra: Média aritmética simples das notas lançadas até o momento
-            // Se houver menos de 4 lançamentos, divide pelo número de lançamentos para mostrar a média real atual.
             const divisor = Math.max(1, lans.length);
             const mg = sum / divisor;
             return Math.floor(mg * 10) / 10;
@@ -174,25 +181,33 @@ export function GradesProvider({ children }: { children: React.ReactNode }) {
 
     const getSituacao = useCallback(
         (protagonistaId: string, disciplinaId: string): 'Aprovado' | 'Aprovar' | 'Reprovado' | 'Recuperação' | 'Retido' | 'Pendente' | 'Inapto' | 'Cursando' | 'Em curso' => {
-            const safeLancamentos = (lancamentos || []).filter(Boolean);
             const mg = getMG(protagonistaId, disciplinaId);
-            const lRegular = (Array.isArray(safeLancamentos) ? safeLancamentos : []).filter(l =>
-                l?.protagonistaId === protagonistaId &&
-                l?.disciplinaId === disciplinaId &&
-                l?.bimestre !== undefined &&
-                l?.media !== null &&
-                l?.bimestre <= 4
-            );
-            const pontos = lRegular.reduce((acc, l) => acc + (l?.media || 0), 0);
 
-            if (mg === null && lRegular.length === 0) return 'Em curso';
-            if (lRegular.length < 4 && mg !== null) return 'Em curso';
+            // Filtro inteligente de bimestres regulares preenchidos
+            const regularLans = (Array.isArray(lancamentos) ? lancamentos : []).filter(l => {
+                if (l?.protagonistaId !== protagonistaId || l?.disciplinaId !== disciplinaId) return false;
+                if (!l?.bimestre || l.bimestre > 4) return false;
+                if (l?.media === null || l?.media === undefined) return false;
 
-            if (lRegular.length === 4) {
+                // Aplicar a mesma regra de ignorar 0s de placeholder
+                if (l?.media === 0) {
+                    const bimConfig = configuracao?.bimestres?.find(b => b.numero === l.bimestre);
+                    if (bimConfig?.fechado || l.bimestre === 4) return true;
+                    return false;
+                }
+                return true;
+            });
+
+            const pontos = regularLans.reduce((acc, l) => acc + (l?.media || 0), 0);
+
+            if (mg === null && regularLans.length === 0) return 'Em curso';
+            if (regularLans.length < 4) return 'Em curso';
+
+            if (regularLans.length === 4) {
                 if (pontos < 10) return 'Inapto';
                 if (mg !== null && mg >= 6.0) return 'Aprovar';
 
-                const rfNote = safeLancamentos.find(l =>
+                const rfNote = lancamentos?.find(l =>
                     l?.protagonistaId === protagonistaId &&
                     l?.disciplinaId === disciplinaId &&
                     l?.bimestre === 5

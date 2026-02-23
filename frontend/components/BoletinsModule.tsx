@@ -138,10 +138,14 @@ export default function BoletinsModule() {
             const b3 = getMedia(p.id, d.id, 3);
             const b4 = getMedia(p.id, d.id, 4);
             const mfValue = getMF(p.id, d.id);
-            const mgValue = getMG(p.id, d.id) || 0;
+            const mgValue = getMG(p.id, d.id);
             const sit = getSituacao(p.id, d.id) || '---';
 
-            const des = (mfValue ?? mgValue) >= 8 ? 'ÓTIMO' : (mfValue ?? mgValue) >= 6 ? 'BOM' : (mfValue ?? mgValue) >= 5 ? 'REGULAR' : 'INSUFICIENTE';
+            const effectiveGrade = mfValue ?? mgValue;
+            let des = '---';
+            if (effectiveGrade !== null) {
+                des = effectiveGrade >= 8 ? 'ÓTIMO' : effectiveGrade >= 6 ? 'BOM' : effectiveGrade >= 5 ? 'REGULAR' : 'INSUFICIENTE';
+            }
 
             doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(15, 23, 42);
             doc.text((d.nome || '').substring(0, 35), colX.disc, y + 5);
@@ -150,7 +154,7 @@ export default function BoletinsModule() {
             doc.text(formatMedia(b2), colX.b2 + 3, y + 5, { align: 'center' });
             doc.text(formatMedia(b3), colX.b3 + 3, y + 5, { align: 'center' });
             doc.text(formatMedia(b4), colX.b4 + 3, y + 5, { align: 'center' });
-            doc.text(mgValue.toFixed(1), colX.mg + 3, y + 5, { align: 'center' });
+            doc.text(mgValue !== null ? mgValue.toFixed(1) : '—', colX.mg + 3, y + 5, { align: 'center' });
             doc.setFont('helvetica', 'bold'); doc.text(formatMedia(mfValue), colX.mf + 3, y + 5, { align: 'center' });
             doc.setFont('helvetica', 'normal'); doc.setFontSize(6);
             doc.text(des, colX.des + 5, y + 5, { align: 'center' });
@@ -368,8 +372,8 @@ export default function BoletinsModule() {
                                                 <td style={{ padding: '0.875rem 0.5rem', textAlign: 'center', fontWeight: 600, color: situacaoColor(rf) }}>
                                                     {formatMedia(rf)}
                                                 </td>
-                                                <td style={{ padding: '0.875rem 0.75rem', textAlign: 'center', fontWeight: 900, fontSize: '1rem', color: situacaoColor(mf || mg), background: 'hsl(var(--primary)/0.03)' }}>
-                                                    {formatMedia(mf || mg)}
+                                                <td style={{ padding: '0.875rem 0.75rem', textAlign: 'center', fontWeight: 900, fontSize: '1rem', color: situacaoColor(mf ?? mg), background: 'hsl(var(--primary)/0.03)' }}>
+                                                    {formatMedia(mf ?? mg)}
                                                 </td>
                                                 <td style={{ padding: '0.875rem 0.75rem', textAlign: 'center', borderRadius: '0 0.5rem 0.5rem 0' }}>
                                                     <span style={{

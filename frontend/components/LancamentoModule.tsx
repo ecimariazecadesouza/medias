@@ -189,7 +189,7 @@ export default function LancamentoModule({ readOnly = false, role, userEmail }: 
                         turmaId: selTurma,
                         turmaNome: turmas.find(t => t.id === selTurma)?.nome,
                         bimestre: b as any,
-                        media: mediaVal !== '' ? Number(mediaVal) : null,
+                        media: (mediaVal && mediaVal.trim() !== '') ? Number(mediaVal) : null,
                         dataLancamento: new Date().toISOString()
                     });
                 });
@@ -241,9 +241,8 @@ export default function LancamentoModule({ readOnly = false, role, userEmail }: 
         const filled = [g1, g2, g3, g4].filter(x => x !== null) as number[];
         const pts = [g1, g2, g3, g4].reduce((acc: number, v) => acc + (v || 0), 0);
 
-        // MG institucional: soma / 4, arredondado para 1 casa decimal
-        const mgRaw = pts / 4;
-        const mg = filled.length > 0 ? Math.floor(mgRaw * 10) / 10 : null;
+        // MG institucional: média das notas lançadas
+        const mg = filled.length > 0 ? Math.floor((pts / filled.length) * 10) / 10 : null;
 
         // Tabela Precisa
         let precisa = '----';
@@ -453,8 +452,8 @@ export default function LancamentoModule({ readOnly = false, role, userEmail }: 
                                                         </span>
                                                     </td>
                                                     <td className="text-center">
-                                                        <span className={`desempenho-text color-${getGradeClass(String(mf || pts / 4 || ''))}`}>
-                                                            {(mf || pts / 4 || 0) >= 8 ? 'ÓTIMO' : (mf || pts / 4 || 0) >= 6 ? 'BOM' : (mf || pts / 4 || 0) >= 5 ? 'REGULAR' : 'INSUFICIENTE'}
+                                                        <span className={`desempenho-text color-${getGradeClass(String(mf || mg || ''))}`}>
+                                                            {(mf || mg || 0) >= 8 ? 'ÓTIMO' : (mf || mg || 0) >= 6 ? 'BOM' : (mf || mg || 0) >= 5 ? 'REGULAR' : 'INSUFICIENTE'}
                                                         </span>
                                                     </td>
                                                 </tr>

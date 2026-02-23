@@ -107,10 +107,11 @@ export default function ConselhoModule() {
         const discLans = safeLancamentos.filter(l => l?.protagonistaId === pId && l?.disciplinaId === dId);
         const regularLans = discLans.filter(l => l?.bimestre >= 1 && l?.bimestre <= bimRef);
         const sum = regularLans.reduce((acc, l) => acc + (l?.media || 0), 0);
-        const filledCount = regularLans.filter(l => l?.media !== null).length;
+        const filled = regularLans.filter(l => l?.media !== null && l?.media !== undefined);
+        const filledCount = filled.length;
 
         let mf: number | null = null;
-        const mg = bimRef > 0 ? (sum / bimRef) : 0;
+        const mg = filledCount > 0 ? (sum / filledCount) : 0;
 
         if (bimRef < 4) {
             mf = Math.floor(mg * 10) / 10;
