@@ -59,8 +59,18 @@ export default function AnalysesModule() {
         if (filterDisciplina && l.disciplinaId !== filterDisciplina) return false;
 
         if (filterBimestre && String(l.bimestre) !== filterBimestre) return false;
-        return l.media !== null;
-    }), [safeLancamentos, filterTurma, filterFormacao, filterSubformacao, filterArea, filterDisciplina, filterBimestre, hierarchyMap]);
+
+        const m = l.media;
+        if (m === null || m === undefined || (m as any) === '') return false;
+
+        // Smart Filter: Se for 0, só conta se o bimestre estiver fechado
+        if (Number(m) === 0) {
+            const bimConfig = configuracao?.bimestres?.find(b => b.numero === l.bimestre);
+            if (!bimConfig?.fechado) return false;
+        }
+
+        return true;
+    }), [safeLancamentos, filterTurma, filterFormacao, filterSubformacao, filterArea, filterDisciplina, filterBimestre, hierarchyMap, configuracao]);
 
     const totalLancamentos = filteredLans.length;
     const aprovados = filteredLans.filter(l => (l.media ?? 0) >= mediaMinima).length;
@@ -292,7 +302,7 @@ export default function AnalysesModule() {
                                                     <div style={{
                                                         position: 'absolute', bottom: `${(m.media! / 10) * 100}%`, left: '50%', width: '100%',
                                                         height: '2px', background: 'hsl(var(--accent)/0.3)',
-                                                        transform: `rotate(${Math.atan2(((next.media! - m.media!) / 10) * 180, 80) * (180 / Math.PI)}deg)`,
+                                                        transform: `rotate(${-Math.atan2(((next.media! - m.media!) / 10) * 180, 100) * (180 / Math.PI)}deg)`,
                                                         transformOrigin: 'left center', zIndex: 1
                                                     }} />
                                                 )}
