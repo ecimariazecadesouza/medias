@@ -14,10 +14,10 @@ export default function GradeCurricularModule({ readOnly = false }: { readOnly?:
         disciplinas, setDisciplinas
     } = useGrades();
 
-    const safeFormacoes = formacoes || [];
-    const safeSubformacoes = subformacoes || [];
-    const safeAreas = areas || [];
-    const safeDisciplinas = disciplinas || [];
+    const safeFormacoes = (formacoes || []).filter(Boolean);
+    const safeSubformacoes = (subformacoes || []).filter(Boolean);
+    const safeAreas = (areas || []).filter(Boolean);
+    const safeDisciplinas = (disciplinas || []).filter(Boolean);
     // ... rest of logic
     const [expanded, setExpanded] = useState<Record<string, boolean>>({});
     type ModalState = { type: 'formacao' | 'subformacao' | 'area' | 'disciplina'; parentId?: string; editing?: any };
@@ -59,7 +59,7 @@ export default function GradeCurricularModule({ readOnly = false }: { readOnly?:
                     id: modal.editing?.id ?? newId(),
                     nome: formName,
                     areaId: modal.parentId!,
-                    areaNome: areas.find(a => a.id === modal.parentId)?.nome,
+                    areaNome: safeAreas.find(a => a?.id === modal.parentId)?.nome,
                     periodicidade: periodicity
                 };
                 await api.disciplinas.save(d);
@@ -98,8 +98,8 @@ export default function GradeCurricularModule({ readOnly = false }: { readOnly?:
         } catch { showMsg('Erro ao excluir.'); }
     };
 
-    const totalDisciplinas = disciplinas.length;
-    const totalAreas = areas.length;
+    const totalDisciplinas = safeDisciplinas.length;
+    const totalAreas = safeAreas.length;
 
     const modalLabels: Record<string, string> = {
         formacao: 'Formação', subformacao: 'Subformação', area: 'Área', disciplina: 'Disciplina'
@@ -187,13 +187,13 @@ export default function GradeCurricularModule({ readOnly = false }: { readOnly?:
 
                                     {expanded[f.id] && (
                                         <div style={{ padding: '0.75rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                            {subformacoes.filter(s => s.formacaoId === f.id).length === 0 && (
+                                            {safeSubformacoes.filter(s => s?.formacaoId === f?.id).length === 0 && (
                                                 <p style={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', paddingLeft: '1rem' }}>
-                                                    Nenhuma subformação. {!readOnly && <button className="btn btn-ghost btn-sm" onClick={() => openModal('subformacao', f.id)} style={{ padding: '0 0.25rem' }}>Adicionar</button>}
+                                                    Nenhuma subformação. {!readOnly && <button className="btn btn-ghost btn-sm" onClick={() => openModal('subformacao', f?.id)} style={{ padding: '0 0.25rem' }}>Adicionar</button>}
                                                 </p>
                                             )}
-                                            {subformacoes.filter(s => s.formacaoId === f.id).map(sub => {
-                                                const subAreas = areas.filter(a => a.subformacaoId === sub.id);
+                                            {safeSubformacoes.filter(s => s?.formacaoId === f?.id).map(sub => {
+                                                const subAreas = safeAreas.filter(a => a?.subformacaoId === sub?.id);
                                                 return (
                                                     <div key={sub.id} className="tree-node">
                                                         {/* Subformação */}
@@ -217,7 +217,7 @@ export default function GradeCurricularModule({ readOnly = false }: { readOnly?:
                                                                     </p>
                                                                 )}
                                                                 {subAreas.map(a => {
-                                                                    const areaDisciplinas = disciplinas.filter(d => d.areaId === a.id);
+                                                                    const areaDisciplinas = safeDisciplinas.filter(d => d?.areaId === a?.id);
                                                                     return (
                                                                         <div key={a.id} className="tree-node">
                                                                             {/* Área */}

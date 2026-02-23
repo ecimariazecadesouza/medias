@@ -22,9 +22,9 @@ export default function AnalysesModule() {
     const [filterDisciplina, setFilterDisciplina] = useState('');
     const [filterBimestre, setFilterBimestre] = useState<string>('');
 
-    const safeLancamentos = lancamentos || [];
-    const safeDisciplinas = disciplinas || [];
-    const safeTurmas = turmas || [];
+    const safeLancamentos = (lancamentos || []).filter(Boolean);
+    const safeDisciplinas = (disciplinas || []).filter(Boolean);
+    const safeTurmas = (turmas || []).filter(Boolean);
     const mediaMinima = configuracao?.mediaMinima || 6.0;
 
     const filteredLans = useMemo(() => safeLancamentos.filter(l => {
@@ -47,7 +47,7 @@ export default function AnalysesModule() {
     const mediasByDisciplina = useMemo(() => {
         const map: Record<string, { sum: number; count: number; nome: string }> = {};
         filteredLans.forEach(l => {
-            if (!map[l.disciplinaId]) map[l.disciplinaId] = { sum: 0, count: 0, nome: l.disciplinaNome || disciplinas.find(d => d.id === l.disciplinaId)?.nome || l.disciplinaId };
+            map[l.disciplinaId] = { sum: 0, count: 0, nome: l?.disciplinaNome || safeDisciplinas.find(d => d?.id === l?.disciplinaId)?.nome || l?.disciplinaId };
             map[l.disciplinaId].sum += l.media ?? 0;
             map[l.disciplinaId].count++;
         });
@@ -68,7 +68,7 @@ export default function AnalysesModule() {
     const mediasByTurma = useMemo(() => {
         const map: Record<string, { sum: number; count: number; nome: string }> = {};
         filteredLans.forEach(l => {
-            if (!map[l.turmaId]) map[l.turmaId] = { sum: 0, count: 0, nome: l.turmaNome || turmas.find(t => t.id === l.turmaId)?.nome || l.turmaId };
+            map[l.turmaId] = { sum: 0, count: 0, nome: l?.turmaNome || safeTurmas.find(t => t?.id === l?.turmaId)?.nome || l?.turmaId };
             map[l.turmaId].sum += l.media ?? 0;
             map[l.turmaId].count++;
         });

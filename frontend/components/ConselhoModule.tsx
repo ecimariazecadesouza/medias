@@ -15,6 +15,15 @@ export default function ConselhoModule() {
         refreshConselho
     } = useGrades();
 
+    const safeTurmas = (turmas || []).filter(Boolean);
+    const safeDisciplinas = (disciplinas || []).filter(Boolean);
+    const safeProtagonistas = (protagonistas || []).filter(Boolean);
+    const safeLancamentos = (lancamentos || []).filter(Boolean);
+    const safeAreas = (areas || []).filter(Boolean);
+    const safeSubformacoes = (subformacoes || []).filter(Boolean);
+    const safeFormacoes = (formacoes || []).filter(Boolean);
+    const safeConselhos = (conselhos || []).filter(Boolean);
+
     const [selTurma, setSelTurma] = useState('');
     const [bimRef, setBimRef] = useState<1 | 2 | 3 | 4>(4);
     const [selFormacao, setSelFormacao] = useState('');
@@ -32,21 +41,20 @@ export default function ConselhoModule() {
     const [colsCollapsed, setColsCollapsed] = useState(false);
 
     useEffect(() => {
-        setLocalConselhos(conselhos);
-    }, [conselhos]);
+        setLocalConselhos(safeConselhos);
+    }, [safeConselhos]);
 
-    const mediaMinima = configuracao.mediaMinima;
-    const activeTurma = turmas.find(t => t.id === selTurma);
+    const mediaMinima = configuracao?.mediaMinima || 6.0;
+    const activeTurma = safeTurmas.find(t => t?.id === selTurma);
 
-    // Cascading Filter Logic
     const filteredSubformacoes = useMemo(() =>
-        subformacoes.filter(sf => !selFormacao || sf.formacaoId === selFormacao),
-        [subformacoes, selFormacao]
+        safeSubformacoes.filter(sf => !selFormacao || sf?.formacaoId === selFormacao),
+        [safeSubformacoes, selFormacao]
     );
 
     const filteredAreas = useMemo(() =>
-        areas.filter(a => !selSubformacao || a.subformacaoId === selSubformacao),
-        [areas, selSubformacao]
+        safeAreas.filter(a => !selSubformacao || a?.subformacaoId === selSubformacao),
+        [safeAreas, selSubformacao]
     );
 
     const turmaProtsAll = useMemo(() => {
@@ -58,39 +66,39 @@ export default function ConselhoModule() {
     const turmaDiscs = useMemo(() => {
         if (!selTurma) return [];
         const linkedIds = activeTurma?.disciplinaIds || [];
-        const gradedIds = new Set(lancamentos.filter(l => l.turmaId === selTurma).map(l => l.disciplinaId));
+        const gradedIds = new Set(safeLancamentos.filter(l => l?.turmaId === selTurma).map(l => l?.disciplinaId));
 
-        let list = disciplinas.filter(d => linkedIds.includes(d.id) || gradedIds.has(d.id));
+        let list = safeDisciplinas.filter(d => linkedIds.includes(d?.id) || gradedIds.has(d?.id));
 
         // Apply category filters
         if (selArea) {
-            list = list.filter(d => d.areaId === selArea);
+            list = list.filter(d => d?.areaId === selArea);
         } else if (selSubformacao) {
-            const areaIds = areas.filter(a => a.subformacaoId === selSubformacao).map(a => a.id);
-            list = list.filter(d => areaIds.includes(d.areaId));
+            const areaIds = safeAreas.filter(a => a?.subformacaoId === selSubformacao).map(a => a?.id);
+            list = list.filter(d => areaIds.includes(d?.areaId));
         } else if (selFormacao) {
-            const sfIds = subformacoes.filter(sf => sf.formacaoId === selFormacao).map(sf => sf.id);
-            const areaIds = areas.filter(a => sfIds.includes(a.subformacaoId)).map(a => a.id);
-            list = list.filter(d => areaIds.includes(d.areaId));
+            const sfIds = safeSubformacoes.filter(sf => sf?.formacaoId === selFormacao).map(sf => sf?.id);
+            const areaIds = safeAreas.filter(a => sfIds.includes(a?.subformacaoId)).map(a => a?.id);
+            list = list.filter(d => areaIds.includes(d?.areaId));
         }
 
         // Apply specific disciplina filter
         if (selDisciplina) {
-            list = list.filter(d => d.id === selDisciplina);
+            list = list.filter(d => d?.id === selDisciplina);
         }
 
-        return list.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
-    }, [selTurma, activeTurma, disciplinas, lancamentos, selArea, selSubformacao, selFormacao, selDisciplina, areas, subformacoes]);
+        return list.sort((a, b) => (a?.nome || '').localeCompare(b?.nome || ''));
+    }, [selTurma, activeTurma, safeDisciplinas, safeLancamentos, selArea, selSubformacao, selFormacao, selDisciplina, safeAreas, safeSubformacoes]);
 
     // All disciplinas for the disciplina dropdown (before selDisciplina filter)
     const turmaDiscsForDropdown = useMemo(() => {
         if (!selTurma) return [];
         const linkedIds = activeTurma?.disciplinaIds || [];
-        const gradedIds = new Set(lancamentos.filter(l => l.turmaId === selTurma).map(l => l.disciplinaId));
-        return disciplinas
-            .filter(d => linkedIds.includes(d.id) || gradedIds.has(d.id))
-            .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
-    }, [selTurma, activeTurma, disciplinas, lancamentos]);
+        const gradedIds = new Set(safeLancamentos.filter(l => l?.turmaId === selTurma).map(l => l?.disciplinaId));
+        return safeDisciplinas
+            .filter(d => linkedIds.includes(d?.id) || gradedIds.has(d?.id))
+            .sort((a, b) => (a?.nome || '').localeCompare(b?.nome || ''));
+    }, [selTurma, activeTurma, safeDisciplinas, safeLancamentos]);
 
     // Refined Simulation Logic
     const getSimulationData = (pId: string, dId: string) => {
@@ -290,7 +298,7 @@ export default function ConselhoModule() {
                                 <select className="select" style={{ height: '2.375rem', fontSize: '0.875rem', fontWeight: 600 }}
                                     value={selTurma} onChange={e => { setSelTurma(e.target.value); setSelArea(''); setSelSubformacao(''); setSelFormacao(''); setSelDisciplina(''); }}>
                                     <option value="">Selecione...</option>
-                                    {turmas.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
+                                    {safeTurmas.map(t => <option key={t?.id} value={t?.id}>{t?.nome}</option>)}
                                 </select>
                             </div>
                         </div>
@@ -357,7 +365,7 @@ export default function ConselhoModule() {
                                 <select className="select" style={{ height: '2.375rem', fontSize: '0.84rem' }}
                                     value={selFormacao} onChange={e => { setSelFormacao(e.target.value); setSelSubformacao(''); setSelArea(''); setSelDisciplina(''); }}>
                                     <option value="">Todas as formações</option>
-                                    {formacoes.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
+                                    {safeFormacoes.map(f => <option key={f?.id} value={f?.id}>{f?.nome}</option>)}
                                 </select>
                             </div>
 
@@ -385,7 +393,7 @@ export default function ConselhoModule() {
                                 <select className="select" style={{ height: '2.375rem', fontSize: '0.84rem' }}
                                     value={selDisciplina} onChange={e => setSelDisciplina(e.target.value)}>
                                     <option value="">Todas as disciplinas</option>
-                                    {turmaDiscsForDropdown.map(d => <option key={d.id} value={d.id}>{d.nome}</option>)}
+                                    {turmaDiscsForDropdown.map(d => <option key={d?.id} value={d?.id}>{d?.nome}</option>)}
                                 </select>
                             </div>
 

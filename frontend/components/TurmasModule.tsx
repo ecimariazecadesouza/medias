@@ -14,16 +14,16 @@ const empty = (): Omit<Turma, 'id'> => ({
 
 export default function TurmasModule({ readOnly = false }: { readOnly?: boolean }) {
     const { turmas, setTurmas, protagonistas, disciplinas, configuracao, getSituacao } = useGrades();
+    const safeTurmas = (turmas || []).filter(Boolean);
+    const safeProtagonistas = (protagonistas || []).filter(Boolean);
+    const safeDisciplinas = (disciplinas || []).filter(Boolean);
+
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState<Turma | null>(null);
     const [form, setForm] = useState(empty());
     const [saving, setSaving] = useState(false);
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [toast, setToast] = useState('');
-
-    const safeTurmas = turmas || [];
-    const safeProtagonistas = protagonistas || [];
-    const safeDisciplinas = disciplinas || [];
 
     const anoLetivo = (configuracao?.anoLetivo) || new Date().getFullYear().toString();
 
@@ -84,7 +84,7 @@ export default function TurmasModule({ readOnly = false }: { readOnly?: boolean 
     }), [safeTurmas, safeProtagonistas]);
 
     const getTurmaQuantitativos = (tId: string, discIds: string[]) => {
-        const turmaProts = protagonistas.filter(p => p.turmaId === tId);
+        const turmaProts = safeProtagonistas.filter(p => p?.turmaId === tId);
 
         const counts = {
             Cursando: turmaProts.filter(p => p.status === 'Cursando').length,
@@ -211,9 +211,9 @@ export default function TurmasModule({ readOnly = false }: { readOnly?: boolean 
                                         </thead>
                                         <tbody>
                                             {yearTurmas.map(t => {
-                                                const turmaProts = protagonistas.filter(p => p.turmaId === t.id);
-                                                const isExpanded = expandedId === t.id;
-                                                const q = getTurmaQuantitativos(t.id, t.disciplinaIds || []);
+                                                const turmaProts = safeProtagonistas.filter(p => p?.turmaId === t?.id);
+                                                const isExpanded = expandedId === t?.id;
+                                                const q = getTurmaQuantitativos(t?.id, t?.disciplinaIds || []);
 
                                                 return (
                                                     <React.Fragment key={t.id}>
@@ -368,7 +368,7 @@ export default function TurmasModule({ readOnly = false }: { readOnly?: boolean 
                                         borderRadius: 'var(--radius)',
                                         border: '1px solid hsl(var(--border))'
                                     }}>
-                                        {[...disciplinas].sort((a, b) => a.nome.localeCompare(b.nome)).map(d => (
+                                        {[...safeDisciplinas].sort((a, b) => (a?.nome || '').localeCompare(b?.nome || '')).map(d => (
                                             <label key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', cursor: 'pointer' }}>
                                                 <input
                                                     type="checkbox"

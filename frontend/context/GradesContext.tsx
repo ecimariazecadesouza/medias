@@ -122,22 +122,22 @@ export function GradesProvider({ children }: { children: React.ReactNode }) {
 
     const getMG = useCallback(
         (protagonistaId: string, disciplinaId: string): number | null => {
-            const safeDisciplinas = disciplinas || [];
-            const safeLancamentos = lancamentos || [];
+            const safeDisciplinas = (disciplinas || []).filter(Boolean);
+            const safeLancamentos = (lancamentos || []).filter(Boolean);
 
-            const disc = safeDisciplinas.find(d => d.id === disciplinaId);
+            const disc = safeDisciplinas.find(d => d?.id === disciplinaId);
             if (!disc) return null;
 
             const relevantBims = [1, 2, 3, 4];
             const lans = safeLancamentos.filter(
-                l => l.protagonistaId === protagonistaId &&
-                    l.disciplinaId === disciplinaId &&
-                    relevantBims.includes(l.bimestre as any) &&
-                    l.media !== null
+                l => l?.protagonistaId === protagonistaId &&
+                    l?.disciplinaId === disciplinaId &&
+                    relevantBims.includes(l?.bimestre as any) &&
+                    l?.media !== null
             );
 
             if (!lans.length) return null;
-            const sum = lans.reduce((acc, l) => acc + (l.media ?? 0), 0);
+            const sum = lans.reduce((acc, l) => acc + (l?.media ?? 0), 0);
 
             // Regra: Arredondar para uma casa decimal (ex: 5.54 -> 5.5)
             const mg = sum / 4;
@@ -167,10 +167,16 @@ export function GradesProvider({ children }: { children: React.ReactNode }) {
 
     const getSituacao = useCallback(
         (protagonistaId: string, disciplinaId: string): 'Aprovado' | 'Aprovar' | 'Reprovado' | 'Recuperação' | 'Retido' | 'Pendente' | 'Inapto' | 'Cursando' | 'Em curso' => {
-            const safeLancamentos = lancamentos || [];
+            const safeLancamentos = (lancamentos || []).filter(Boolean);
             const mg = getMG(protagonistaId, disciplinaId);
-            const lRegular = safeLancamentos.filter(l => l.protagonistaId === protagonistaId && l.disciplinaId === disciplinaId && l.bimestre <= 4 && l.media !== null);
-            const pontos = lRegular.reduce((acc, l) => acc + (l.media || 0), 0);
+            const lRegular = safeLancamentos.filter(l =>
+                l?.protagonistaId === protagonistaId &&
+                l?.disciplinaId === disciplinaId &&
+                l?.bimestre !== undefined &&
+                l?.bimestre <= 4 &&
+                l?.media !== null
+            );
+            const pontos = lRegular.reduce((acc, l) => acc + (l?.media || 0), 0);
 
             if (mg === null && lRegular.length === 0) return 'Em curso';
             if (lRegular.length < 4 && mg !== null) return 'Em curso';

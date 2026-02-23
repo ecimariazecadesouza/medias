@@ -99,7 +99,7 @@ export default function ProtagonistsModule({ readOnly = false }: { readOnly?: bo
         try {
             if (batchMode) {
                 const names = batchNames.split('\n').map(n => n.trim()).filter(n => n !== '');
-                const turma = turmas.find(t => t.id === form.turmaId);
+                const turma = safeTurmas.find(t => t?.id === form.turmaId);
                 const newRows: Protagonist[] = names.map(name => ({
                     id: newId(),
                     nome: name,
@@ -113,7 +113,7 @@ export default function ProtagonistsModule({ readOnly = false }: { readOnly?: bo
                 setProtagonistas(prev => [...newRows, ...prev]);
                 showToast(`${newRows.length} protagonistas cadastrados!`);
             } else {
-                const turma = turmas.find(t => t.id === form.turmaId);
+                const turma = safeTurmas.find(t => t?.id === form.turmaId);
                 const p: Protagonist = {
                     id: editing?.id ?? newId(),
                     nome: form.nome,
@@ -179,8 +179,8 @@ export default function ProtagonistsModule({ readOnly = false }: { readOnly?: bo
         e.target.value = '';
     };
 
-    const safeProtagonistas = protagonistas || [];
-    const safeTurmas = turmas || [];
+    const safeProtagonistas = (protagonistas || []).filter(Boolean);
+    const safeTurmas = (turmas || []).filter(Boolean);
 
     const filtered = safeProtagonistas.filter(p => {
         if (!p) return false;
@@ -197,7 +197,7 @@ export default function ProtagonistsModule({ readOnly = false }: { readOnly?: bo
     const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
     const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
-    const getTurmaName = (id: string) => safeTurmas.find(t => t.id === id)?.nome || '—';
+    const getTurmaName = (id: string) => safeTurmas.find(t => t?.id === id)?.nome || '—';
 
     return (
         <>
@@ -260,7 +260,7 @@ export default function ProtagonistsModule({ readOnly = false }: { readOnly?: bo
                     </div>
                     <select className="select" style={{ width: '200px' }} value={filterTurma} onChange={e => { setFilterTurma(e.target.value); setPage(1); }}>
                         <option value="">Todas as turmas</option>
-                        {safeTurmas.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
+                        {safeTurmas.map(t => <option key={t?.id} value={t?.id}>{t?.nome}</option>)}
                     </select>
                     <select className="select" style={{ width: '180px' }} value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }}>
                         <option value="">Todos os status</option>
@@ -300,7 +300,7 @@ export default function ProtagonistsModule({ readOnly = false }: { readOnly?: bo
                                             <td style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{p.matricula || '—'}</td>
                                             <td>
                                                 <span className="badge badge-blue">
-                                                    {p.turmaNome || getTurmaName(p.turmaId || '')}
+                                                    {p?.turmaNome || getTurmaName(p?.turmaId || '')}
                                                 </span>
                                             </td>
                                             <td>
@@ -393,7 +393,7 @@ export default function ProtagonistsModule({ readOnly = false }: { readOnly?: bo
                                     <label className="label" style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Turma de Destino *</label>
                                     <select className="select" value={form.turmaId} onChange={e => setForm(f => ({ ...f, turmaId: e.target.value }))}>
                                         <option value="">Selecione...</option>
-                                        {safeTurmas.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
+                                        {safeTurmas.map(t => <option key={t?.id} value={t?.id}>{t?.nome}</option>)}
                                     </select>
                                 </div>
 

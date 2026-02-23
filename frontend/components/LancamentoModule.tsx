@@ -12,10 +12,11 @@ export default function LancamentoModule({ readOnly = false, role, userEmail }: 
         turmas: allTurmas, disciplinas: allDisciplinas, protagonistas, lancamentos, setLancamentos,
         configuracao, docentes, getMG, getMF, getSituacao
     } = useGrades();
-    const safeTurmas = allTurmas || [];
-    const safeDisciplinas = allDisciplinas || [];
-    const safeDocentes = docentes || [];
-    const safeProtagonistas = protagonistas || [];
+    const safeTurmas = (allTurmas || []).filter(Boolean);
+    const safeDisciplinas = (allDisciplinas || []).filter(Boolean);
+    const safeDocentes = (docentes || []).filter(Boolean);
+    const safeProtagonistas = (protagonistas || []).filter(Boolean);
+    const safeLancamentos = (lancamentos || []).filter(Boolean);
 
     // Filtros para Docente
     const isDocente = role === 'Docente';
@@ -31,14 +32,14 @@ export default function LancamentoModule({ readOnly = false, role, userEmail }: 
     const [selSituacao, setSelSituacao] = useState<'Cursando' | 'Transferido' | 'Desistente' | 'Trancado' | 'Formado'>('Cursando');
     const [selBimestre, setSelBimestre] = useState<1 | 2 | 3 | 4 | 5>(1);
 
-    const selTurmaObj = allTurmas.find(t => t.id === selTurma);
+    const selTurmaObj = safeTurmas.find(t => t?.id === selTurma);
     const classDisciplinaIds = selTurmaObj?.disciplinaIds || [];
 
     const disciplinas = useMemo(() => {
         let list = allDisciplinas;
         // Se a turma tiver disciplinas vinculadas, filtra por elas
         if (classDisciplinaIds.length > 0) {
-            list = list.filter(d => classDisciplinaIds.includes(d.id));
+            list = list.filter(d => classDisciplinaIds.includes(d?.id));
         }
 
         // Se for docente, filtra apenas suas disciplinas vinculadas a ESTA turma selecionada
@@ -55,7 +56,7 @@ export default function LancamentoModule({ readOnly = false, role, userEmail }: 
         }
 
         return list;
-    }, [allDisciplinas, classDisciplinaIds, isDocente, docenteProfile, selTurma]);
+    }, [safeDisciplinas, classDisciplinaIds, isDocente, docenteProfile, selTurma]);
 
     const [toast, setToast] = useState('');
     const [grades, setGrades] = useState<Record<string, string>>({});
@@ -75,7 +76,7 @@ export default function LancamentoModule({ readOnly = false, role, userEmail }: 
             .sort((a, b) => (a?.nome || '').localeCompare(b?.nome || ''));
     }, [protagonistas, selTurma, selSituacao]);
 
-    const currentDisciplina = allDisciplinas.find(d => d.id === selDisciplina);
+    const currentDisciplina = safeDisciplinas.find(d => d?.id === selDisciplina);
     const periodicidade = currentDisciplina?.periodicidade || 'Anual';
     const isBimestreAllowed = periodicidade === 'Anual'
         ? true
@@ -105,11 +106,11 @@ export default function LancamentoModule({ readOnly = false, role, userEmail }: 
         const map: Record<string, string> = {};
         turmaProts.forEach(p => {
             [1, 2, 3, 4, 5].forEach(b => {
-                const l = lancamentos.find(l =>
-                    l.protagonistaId === p.id &&
-                    l.disciplinaId === selDisciplina &&
-                    l.turmaId === selTurma &&
-                    l.bimestre === b
+                const l = safeLancamentos.find(l =>
+                    l?.protagonistaId === p?.id &&
+                    l?.disciplinaId === selDisciplina &&
+                    l?.turmaId === selTurma &&
+                    l?.bimestre === b
                 );
                 const key = `${p.id}-${b}`;
                 map[key] = l?.media !== null && l?.media !== undefined ? String(l.media).replace('.', ',') : '';
@@ -144,13 +145,13 @@ export default function LancamentoModule({ readOnly = false, role, userEmail }: 
             const cols = row.split('\t');
             if (cols.length < 2) return;
             const name = cols[0].trim().toLowerCase();
-            const prot = turmaProts.find(p => p.nome.toLowerCase() === name);
+            const prot = turmaProts.find(p => p?.nome?.toLowerCase() === name);
             if (prot) {
                 // Suporta colando Nome [TAB] B1 [TAB] B2 [TAB] B3 [TAB] B4 [TAB] RF
                 for (let i = 1; i <= 5; i++) {
                     const val = cols[i]?.trim();
                     if (val !== undefined && val !== '') {
-                        newGrades[`${prot.id}-${i}`] = val;
+                        newGrades[`${prot?.id}-${i}`] = val;
                         count++;
                     }
                 }

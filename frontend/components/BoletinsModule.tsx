@@ -263,7 +263,7 @@ export default function BoletinsModule() {
                             <label className="label">Turma</label>
                             <select className="select" value={selTurma} onChange={e => { setSelTurma(e.target.value); setSelProtagonista(''); }}>
                                 <option value="">Selecione a turma...</option>
-                                {turmas.map(t => <option key={t.id} value={t.id}>{t.nome} ({t.anoLetivo})</option>)}
+                                {safeTurmas.map(t => <option key={t?.id} value={t?.id}>{t?.nome} ({t?.anoLetivo})</option>)}
                             </select>
                         </div>
                         {selTurma && (
@@ -271,7 +271,7 @@ export default function BoletinsModule() {
                                 <label className="label">Protagonista</label>
                                 <select className="select" value={selProtagonista} onChange={e => setSelProtagonista(e.target.value)}>
                                     <option value="">Selecione o protagonista...</option>
-                                    {turmaProts.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+                                    {turmaProts.map(p => <option key={p?.id} value={p?.id}>{p?.nome}</option>)}
                                 </select>
                             </div>
                         )}
