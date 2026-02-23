@@ -83,19 +83,22 @@ export function GradesProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const safe = async <T,>(fn: () => Promise<T>, setter: (v: T) => void) => {
-        try { setter(await fn()); } catch { /* silently skip on local dev */ }
+    const safe = async <T,>(fn: () => Promise<T>, setter: (v: T) => void, defaultValue: T) => {
+        try {
+            const val = await fn();
+            setter(val ?? defaultValue);
+        } catch { /* silently skip on local dev */ }
     };
 
-    const refreshProtagonistas = useCallback(() => safe(api.protagonistas.getAll, setProtagonistas), []);
-    const refreshTurmas = useCallback(() => safe(api.turmas.getAll, setTurmas), []);
-    const refreshDocentes = useCallback(() => safe(api.docentes.getAll, setDocentes), []);
-    const refreshDisciplinas = useCallback(() => safe(api.disciplinas.getAll, setDisciplinas), []);
-    const refreshAreas = useCallback(() => safe(api.areas.getAll, setAreas), []);
-    const refreshSubformacoes = useCallback(() => safe(api.subformacoes.getAll, setSubformacoes), []);
-    const refreshFormacoes = useCallback(() => safe(api.formacoes.getAll, setFormacoes), []);
-    const refreshLancamentos = useCallback(() => safe(api.lancamentos.getAll, setLancamentos), []);
-    const refreshConselho = useCallback(() => safe(api.conselho.getAll, setConselhos), []);
+    const refreshProtagonistas = useCallback(() => safe(api.protagonistas.getAll, setProtagonistas, []), []);
+    const refreshTurmas = useCallback(() => safe(api.turmas.getAll, setTurmas, []), []);
+    const refreshDocentes = useCallback(() => safe(api.docentes.getAll, setDocentes, []), []);
+    const refreshDisciplinas = useCallback(() => safe(api.disciplinas.getAll, setDisciplinas, []), []);
+    const refreshAreas = useCallback(() => safe(api.areas.getAll, setAreas, []), []);
+    const refreshSubformacoes = useCallback(() => safe(api.subformacoes.getAll, setSubformacoes, []), []);
+    const refreshFormacoes = useCallback(() => safe(api.formacoes.getAll, setFormacoes, []), []);
+    const refreshLancamentos = useCallback(() => safe(api.lancamentos.getAll, setLancamentos, []), []);
+    const refreshConselho = useCallback(() => safe(api.conselho.getAll, setConselhos, []), []);
     const refreshConfig = useCallback(async () => {
         try {
             const cfg = await api.configuracoes.get();
@@ -119,11 +122,14 @@ export function GradesProvider({ children }: { children: React.ReactNode }) {
 
     const getMG = useCallback(
         (protagonistaId: string, disciplinaId: string): number | null => {
-            const disc = disciplinas.find(d => d.id === disciplinaId);
+            const safeDisciplinas = disciplinas || [];
+            const safeLancamentos = lancamentos || [];
+
+            const disc = safeDisciplinas.find(d => d.id === disciplinaId);
             if (!disc) return null;
 
             const relevantBims = [1, 2, 3, 4];
-            const lans = lancamentos.filter(
+            const lans = safeLancamentos.filter(
                 l => l.protagonistaId === protagonistaId &&
                     l.disciplinaId === disciplinaId &&
                     relevantBims.includes(l.bimestre as any) &&
@@ -160,8 +166,9 @@ export function GradesProvider({ children }: { children: React.ReactNode }) {
 
     const getSituacao = useCallback(
         (protagonistaId: string, disciplinaId: string): 'Aprovado' | 'Aprovar' | 'Reprovado' | 'Recuperação' | 'Retido' | 'Pendente' | 'Inapto' | 'Cursando' | 'Em curso' => {
+            const safeLancamentos = lancamentos || [];
             const mg = getMG(protagonistaId, disciplinaId);
-            const lRegular = lancamentos.filter(l => l.protagonistaId === protagonistaId && l.disciplinaId === disciplinaId && l.bimestre <= 4 && l.media !== null);
+            const lRegular = safeLancamentos.filter(l => l.protagonistaId === protagonistaId && l.disciplinaId === disciplinaId && l.bimestre <= 4 && l.media !== null);
             const pontos = lRegular.reduce((acc, l) => acc + (l.media || 0), 0);
 
             if (mg === null && lRegular.length === 0) return 'Em curso';
@@ -171,7 +178,7 @@ export function GradesProvider({ children }: { children: React.ReactNode }) {
                 if (pontos < 10) return 'Inapto';
                 if (mg !== null && mg >= 6.0) return 'Aprovar';
 
-                const rfNote = lancamentos.find(l => l.protagonistaId === protagonistaId && l.disciplinaId === disciplinaId && l.bimestre === 5)?.media;
+                const rfNote = safeLancamentos.find(l => l.protagonistaId === protagonistaId && l.disciplinaId === disciplinaId && l.bimestre === 5)?.media;
                 if (rfNote === null || rfNote === undefined) return 'Recuperação';
 
                 const mf = getMF(protagonistaId, disciplinaId);

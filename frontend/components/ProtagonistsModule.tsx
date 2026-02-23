@@ -179,7 +179,11 @@ export default function ProtagonistsModule({ readOnly = false }: { readOnly?: bo
         e.target.value = '';
     };
 
-    const filtered = protagonistas.filter(p => {
+    const safeProtagonistas = protagonistas || [];
+    const safeTurmas = turmas || [];
+
+    const filtered = safeProtagonistas.filter(p => {
+        if (!p) return false;
         const q = (search || '').toLowerCase();
         const nome = (p.nome || '').toLowerCase();
         const matricula = (p.matricula || '').toLowerCase();
@@ -193,7 +197,7 @@ export default function ProtagonistsModule({ readOnly = false }: { readOnly?: bo
     const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
     const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
-    const getTurmaName = (id: string) => turmas.find(t => t.id === id)?.nome || '—';
+    const getTurmaName = (id: string) => safeTurmas.find(t => t.id === id)?.nome || '—';
 
     return (
         <>
@@ -203,22 +207,22 @@ export default function ProtagonistsModule({ readOnly = false }: { readOnly?: bo
             <div className="stat-grid">
                 <div className="stat-card blue">
                     <span className="stat-card-label">Total</span>
-                    <span className="stat-card-value">{protagonistas.length}</span>
+                    <span className="stat-card-value">{safeProtagonistas.length}</span>
                     <Users size={40} className="stat-card-icon" />
                 </div>
                 <div className="stat-card green">
                     <span className="stat-card-label">Cursando</span>
-                    <span className="stat-card-value">{protagonistas.filter(p => (p.status || '') === 'Cursando').length}</span>
+                    <span className="stat-card-value">{safeProtagonistas.filter(p => (p?.status || '') === 'Cursando').length}</span>
                     <CheckCircle size={40} className="stat-card-icon" />
                 </div>
                 <div className="stat-card amber">
                     <span className="stat-card-label">Transferência</span>
-                    <span className="stat-card-value">{protagonistas.filter(p => (p.status || '') === 'Transferência').length}</span>
+                    <span className="stat-card-value">{safeProtagonistas.filter(p => (p?.status || '') === 'Transferência').length}</span>
                     <AlertCircle size={40} className="stat-card-icon" />
                 </div>
                 <div className="stat-card red">
                     <span className="stat-card-label">Evasão</span>
-                    <span className="stat-card-value">{protagonistas.filter(p => (p.status || '') === 'Evasão').length}</span>
+                    <span className="stat-card-value">{safeProtagonistas.filter(p => (p?.status || '') === 'Evasão').length}</span>
                     <XCircle size={40} className="stat-card-icon" />
                 </div>
             </div>
@@ -256,7 +260,7 @@ export default function ProtagonistsModule({ readOnly = false }: { readOnly?: bo
                     </div>
                     <select className="select" style={{ width: '200px' }} value={filterTurma} onChange={e => { setFilterTurma(e.target.value); setPage(1); }}>
                         <option value="">Todas as turmas</option>
-                        {turmas.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
+                        {safeTurmas.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
                     </select>
                     <select className="select" style={{ width: '180px' }} value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }}>
                         <option value="">Todos os status</option>
@@ -382,7 +386,7 @@ export default function ProtagonistsModule({ readOnly = false }: { readOnly?: bo
                                     <label className="label" style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Turma de Destino *</label>
                                     <select className="select" value={form.turmaId} onChange={e => setForm(f => ({ ...f, turmaId: e.target.value }))}>
                                         <option value="">Selecione...</option>
-                                        {turmas.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
+                                        {safeTurmas.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
                                     </select>
                                 </div>
 
