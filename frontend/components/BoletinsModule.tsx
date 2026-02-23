@@ -9,6 +9,7 @@ export default function BoletinsModule() {
     const { turmas, protagonistas, disciplinas, lancamentos, configuracao, getMG, getMF, getSituacao, areas, subformacoes } = useGrades();
     const [selTurma, setSelTurma] = useState('');
     const [selProtagonista, setSelProtagonista] = useState('');
+    const [generating, setGenerating] = useState(false);
     const printRef = useRef<HTMLDivElement>(null);
 
     const mediaMinima = configuracao?.mediaMinima || 6.0;
@@ -67,175 +68,119 @@ export default function BoletinsModule() {
 
     const handlePrint = () => window.print();
 
-    const generatePDF = async () => {
-        if (!protagonist || !turma) return;
-
-        const doc = new jsPDF();
-        const pageWidth = 210;
+    const drawStudentBulletin = (doc: jsPDF, p: any, t: any) => {
+        let currentPage = 1;
 
         const drawHeader = (pageNum: number) => {
-            // Logo
             if (configuracao.logoUrl) {
-                try {
-                    doc.addImage(configuracao.logoUrl, 'PNG', 14, 10, 25, 25);
-                } catch (e) {
-                    console.error("Erro ao carregar logo no PDF", e);
-                }
+                try { doc.addImage(configuracao.logoUrl, 'PNG', 14, 10, 25, 25); } catch (e) { console.error(e); }
             }
-
-            // Titles
-            doc.setTextColor(67, 56, 202); // indigo-700
-            doc.setFontSize(24);
-            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(67, 56, 202); doc.setFontSize(24); doc.setFont('helvetica', 'bold');
             doc.text('Boletim Escolar', 105, 25, { align: 'center' });
-
-            doc.setTextColor(100, 116, 139);
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'bold');
-            doc.text('SISTEMA ESCOLAR INTEGRADO - SEI', 105, 32, { align: 'center' });
-
-            // Year
-            doc.setTextColor(67, 56, 202);
-            doc.setFontSize(24);
-            doc.text(String(configuracao.anoLetivo), 180, 25, { align: 'right' });
+            doc.setTextColor(100, 116, 139); doc.setFontSize(10); doc.text('SISTEMA ESCOLAR INTEGRADO - SEI', 105, 32, { align: 'center' });
+            doc.setTextColor(67, 56, 202); doc.setFontSize(24); doc.text(String(configuracao.anoLetivo), 180, 25, { align: 'right' });
 
             if (pageNum > 1) {
-                doc.setFontSize(8);
-                doc.setTextColor(150, 150, 150);
+                doc.setFontSize(8); doc.setTextColor(150, 150, 150);
                 doc.text(`Página ${pageNum}`, 196, 40, { align: 'right' });
                 doc.setFont('helvetica', 'bold');
-                doc.text(`${(protagonist?.nome || '').toUpperCase()} | Turma: ${turma?.nome}`, 14, 40);
+                doc.text(`${(p?.nome || '').toUpperCase()} | Turma: ${t?.nome}`, 14, 40);
             }
         };
 
         const drawStudentBox = () => {
-            doc.setFillColor(248, 250, 252);
-            doc.setDrawColor(226, 232, 240);
+            doc.setFillColor(248, 250, 252); doc.setDrawColor(226, 232, 240);
             doc.roundedRect(14, 45, 182, 30, 3, 3, 'FD');
-
-            doc.setFontSize(9);
-            doc.setTextColor(67, 56, 202);
-            doc.text('Protagonista', 20, 53);
-
-            doc.setTextColor(15, 23, 42);
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.text((protagonist?.nome || '').toUpperCase(), 20, 60);
-
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(100, 116, 139);
-            doc.text(`Matrícula: ${protagonist.matricula || '---'} | Turma: ${turma.nome}`, 20, 68);
+            doc.setFontSize(9); doc.setTextColor(67, 56, 202); doc.text('Protagonista', 20, 53);
+            doc.setTextColor(15, 23, 42); doc.setFontSize(14); doc.setFont('helvetica', 'bold');
+            doc.text((p?.nome || '').toUpperCase(), 20, 60);
+            doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 116, 139);
+            doc.text(`Matrícula: ${p.matricula || '---'} | Turma: ${t.nome}`, 20, 68);
         };
 
         const drawFooter = () => {
             const date = new Date().toLocaleDateString('pt-BR');
-            doc.setFontSize(7);
-            doc.setTextColor(180, 180, 180);
+            doc.setFontSize(7); doc.setTextColor(180, 180, 180);
             doc.text(`SEI - DOCUMENTO GERADO EM ${date}`, 14, 285);
         };
 
-        let currentPage = 1;
+        const colX = { disc: 16, b1: 80, b2: 95, b3: 110, b4: 125, mg: 140, mf: 155, des: 172, sit: 188 };
+        const drawTableHeader = (yPos: number) => {
+            doc.setFillColor(248, 250, 252); doc.rect(14, yPos, 182, 10, 'F');
+            doc.setDrawColor(226, 232, 240); doc.line(14, yPos, 196, yPos); doc.line(14, yPos + 10, 196, yPos + 10);
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(71, 85, 105);
+            doc.text('Disciplina', colX.disc, yPos + 6);
+            doc.text('1ºB', colX.b1 + 3, yPos + 6, { align: 'center' });
+            doc.text('2ºB', colX.b2 + 3, yPos + 6, { align: 'center' });
+            doc.text('3ºB', colX.b3 + 3, yPos + 6, { align: 'center' });
+            doc.text('4ºB', colX.b4 + 3, yPos + 6, { align: 'center' });
+            doc.text('M.G', colX.mg + 3, yPos + 6, { align: 'center' });
+            doc.text('M.F', colX.mf + 3, yPos + 6, { align: 'center' });
+            doc.text('Desempenho', colX.des + 5, yPos + 6, { align: 'center' });
+            doc.text('Situação', colX.sit + 4, yPos + 6, { align: 'center' });
+            return yPos + 10;
+        };
+
         drawHeader(currentPage);
         drawStudentBox();
         drawFooter();
-
-        // Table Constants
-        let y = 85;
-        const colX = {
-            disc: 16, b1: 80, b2: 95, b3: 110, b4: 125, mg: 140, mf: 155, des: 172, sit: 188
-        };
-
-        // Table Header
-        doc.setFillColor(248, 250, 252);
-        doc.rect(14, y, 182, 10, 'F');
-        doc.setDrawColor(226, 232, 240);
-        doc.line(14, y, 196, y);
-        doc.line(14, y + 10, 196, y + 10);
-
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(7);
-        doc.setTextColor(71, 85, 105);
-        doc.text('Disciplina', colX.disc, y + 6);
-        doc.text('1ºB', colX.b1 + 3, y + 6, { align: 'center' });
-        doc.text('2ºB', colX.b2 + 3, y + 6, { align: 'center' });
-        doc.text('3ºB', colX.b3 + 3, y + 6, { align: 'center' });
-        doc.text('4ºB', colX.b4 + 3, y + 6, { align: 'center' });
-        doc.text('M.G', colX.mg + 3, y + 6, { align: 'center' });
-        doc.text('M.F', colX.mf + 3, y + 6, { align: 'center' });
-        doc.text('Desempenho', colX.des + 5, y + 6, { align: 'center' });
-        doc.text('Situação', colX.sit + 4, y + 6, { align: 'center' });
-
-        // Table Rows
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(15, 23, 42);
+        let y = drawTableHeader(85);
 
         turmaDiscs.forEach((d) => {
-            y += 8;
-            if (y > 275) {
-                doc.addPage();
-                currentPage++;
-                y = 50;
-                drawHeader(currentPage);
-                drawFooter();
-                // Redraw table header on new page
-                doc.setFillColor(248, 250, 252);
-                doc.rect(14, y, 182, 8, 'F');
-                doc.setFont('helvetica', 'bold');
-                doc.text('Disciplina', colX.disc, y + 5);
-                doc.text('1ºB', colX.b1 + 3, y + 5, { align: 'center' });
-                doc.text('2ºB', colX.b2 + 3, y + 5, { align: 'center' });
-                doc.text('3ºB', colX.b3 + 3, y + 5, { align: 'center' });
-                doc.text('4ºB', colX.b4 + 3, y + 5, { align: 'center' });
-                doc.text('M.G', colX.mg + 3, y + 5, { align: 'center' });
-                doc.text('M.F', colX.mf + 3, y + 5, { align: 'center' });
-                doc.text('Desempenho', colX.des + 5, y + 5, { align: 'center' });
-                doc.text('Situação', colX.sit + 4, y + 5, { align: 'center' });
-                y += 8;
+            if (y > 265) {
+                doc.addPage(); currentPage++; y = 50;
+                drawHeader(currentPage); drawFooter();
+                y = drawTableHeader(y);
             }
 
-            const b1 = getMedia(protagonist.id, d.id, 1);
-            const b2 = getMedia(protagonist.id, d.id, 2);
-            const b3 = getMedia(protagonist.id, d.id, 3);
-            const b4 = getMedia(protagonist.id, d.id, 4);
-            const rfValue = getMedia(protagonist.id, d.id, 5);
-            const mfValue = getMF(protagonist.id, d.id);
-            const sit = getSituacao(protagonist.id, d.id) || '---';
-
-            // MG calc
+            const b1 = getMedia(p.id, d.id, 1);
+            const b2 = getMedia(p.id, d.id, 2);
+            const b3 = getMedia(p.id, d.id, 3);
+            const b4 = getMedia(p.id, d.id, 4);
+            const mfValue = getMF(p.id, d.id);
+            const sit = getSituacao(p.id, d.id) || '---';
             const filled = [b1, b2, b3, b4].filter(x => x !== null) as number[];
-            const pts = filled.reduce((a, b) => a + b, 0);
-            const mgValue = filled.length > 0 ? pts / 4 : 0;
+            const mgValue = filled.length > 0 ? filled.reduce((a, b) => a + b, 0) / 4 : 0;
+            const des = (mfValue ?? mgValue) >= 8 ? 'ÓTIMO' : (mfValue ?? mgValue) >= 6 ? 'BOM' : (mfValue ?? mgValue) >= 5 ? 'REGULAR' : 'INSUFICIENTE';
 
-            const des = mfValue !== null
-                ? (mfValue >= 8 ? 'ÓTIMO' : mfValue >= 6 ? 'BOM' : mfValue >= 5 ? 'REGULAR' : 'INSUFICIENTE')
-                : (mgValue >= 8 ? 'ÓTIMO' : mgValue >= 6 ? 'BOM' : mgValue >= 5 ? 'REGULAR' : 'INSUFICIENTE');
-
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(7);
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(15, 23, 42);
             doc.text((d.nome || '').substring(0, 35), colX.disc, y + 5);
-
             doc.setFontSize(8);
             doc.text(formatMedia(b1), colX.b1 + 3, y + 5, { align: 'center' });
             doc.text(formatMedia(b2), colX.b2 + 3, y + 5, { align: 'center' });
             doc.text(formatMedia(b3), colX.b3 + 3, y + 5, { align: 'center' });
             doc.text(formatMedia(b4), colX.b4 + 3, y + 5, { align: 'center' });
-
             doc.text(mgValue.toFixed(1), colX.mg + 3, y + 5, { align: 'center' });
-
-            doc.setFont('helvetica', 'bold');
-            doc.text(formatMedia(mfValue), colX.mf + 3, y + 5, { align: 'center' });
-
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(6);
+            doc.setFont('helvetica', 'bold'); doc.text(formatMedia(mfValue), colX.mf + 3, y + 5, { align: 'center' });
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(6);
             doc.text(des, colX.des + 5, y + 5, { align: 'center' });
             doc.text(String(sit).toUpperCase(), colX.sit + 4, y + 5, { align: 'center' });
-
-            doc.setDrawColor(241, 245, 249);
-            doc.line(14, y + 8, 196, y + 8);
+            doc.setDrawColor(241, 245, 249); doc.line(14, y + 8, 196, y + 8);
+            y += 8;
         });
+    };
 
-        doc.save(`Boletim_${(protagonist?.nome || 'documento').replace(/\s/g, '_')}.pdf`);
+    const generatePDF = async () => {
+        if (!protagonist || !turma) return;
+        setGenerating(true);
+        try {
+            const doc = new jsPDF();
+            drawStudentBulletin(doc, protagonist, turma);
+            doc.save(`Boletim_${(protagonist?.nome || 'documento').replace(/\s/g, '_')}.pdf`);
+        } finally { setGenerating(false); }
+    };
+
+    const generateBatchPDF = async () => {
+        if (turmaProts.length === 0 || !turma) return;
+        setGenerating(true);
+        try {
+            const doc = new jsPDF();
+            turmaProts.forEach((p, idx) => {
+                if (idx > 0) doc.addPage();
+                drawStudentBulletin(doc, p, turma);
+            });
+            doc.save(`Boletins_Turma_${turma.nome.replace(/\s/g, '_')}.pdf`);
+        } finally { setGenerating(false); }
     };
 
     const mediasDiscs = protagonist && turmaDiscs.map(d => {
@@ -258,8 +203,8 @@ export default function BoletinsModule() {
                     <div className="card-title">Gerar Boletim Profissional</div>
                 </div>
                 <div className="card-body">
-                    <div className="form-grid form-grid-2" style={{ gap: '1rem', maxWidth: '640px' }}>
-                        <div className="form-group">
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', alignItems: 'flex-end' }}>
+                        <div className="form-group" style={{ flex: '1', minWidth: '240px', maxWidth: '300px' }}>
                             <label className="label">Turma</label>
                             <select className="select" value={selTurma} onChange={e => { setSelTurma(e.target.value); setSelProtagonista(''); }}>
                                 <option value="">Selecione a turma...</option>
@@ -267,13 +212,23 @@ export default function BoletinsModule() {
                             </select>
                         </div>
                         {selTurma && (
-                            <div className="form-group">
-                                <label className="label">Protagonista</label>
+                            <div className="form-group" style={{ flex: '1', minWidth: '240px', maxWidth: '300px' }}>
+                                <label className="label">Protagonista Individual</label>
                                 <select className="select" value={selProtagonista} onChange={e => setSelProtagonista(e.target.value)}>
                                     <option value="">Selecione o protagonista...</option>
                                     {turmaProts.map(p => <option key={p?.id} value={p?.id}>{p?.nome}</option>)}
                                 </select>
                             </div>
+                        )}
+                        {selTurma && (
+                            <button
+                                className="btn btn-secondary"
+                                onClick={generateBatchPDF}
+                                disabled={generating || turmaProts.length === 0}
+                                style={{ height: '2.75rem', padding: '0 1.5rem', whiteSpace: 'nowrap' }}
+                            >
+                                <FileDown size={18} /> {generating ? 'Gerando...' : 'Gerar Boletins da Turma (Lote)'}
+                            </button>
                         )}
                     </div>
                 </div>
@@ -305,8 +260,8 @@ export default function BoletinsModule() {
                                 <button className="btn btn-secondary btn-sm" onClick={handlePrint}>
                                     <Printer size={16} /> Impressão Rápida
                                 </button>
-                                <button className="btn btn-primary btn-sm" onClick={generatePDF}>
-                                    <FileDown size={16} /> Download PDF Premium
+                                <button className="btn btn-primary btn-sm" onClick={generatePDF} disabled={generating}>
+                                    <FileDown size={16} /> {generating ? 'Ocupado...' : 'Download PDF Premium'}
                                 </button>
                             </div>
                         </div>
