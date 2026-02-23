@@ -15,14 +15,14 @@ export default function ConselhoModule() {
         refreshConselho
     } = useGrades();
 
-    const safeTurmas = (Array.isArray(turmas) ? turmas : []).filter(Boolean);
-    const safeDisciplinas = (Array.isArray(disciplinas) ? disciplinas : []).filter(Boolean);
-    const safeProtagonistas = (Array.isArray(protagonistas) ? protagonistas : []).filter(Boolean);
-    const safeLancamentos = (Array.isArray(lancamentos) ? lancamentos : []).filter(Boolean);
-    const safeAreas = (Array.isArray(areas) ? areas : []).filter(Boolean);
-    const safeSubformacoes = (Array.isArray(subformacoes) ? subformacoes : []).filter(Boolean);
-    const safeFormacoes = (Array.isArray(formacoes) ? formacoes : []).filter(Boolean);
-    const safeConselhos = (Array.isArray(conselhos) ? conselhos : []).filter(Boolean);
+    const safeTurmas = useMemo(() => (Array.isArray(turmas) ? turmas : []).filter(Boolean), [turmas]);
+    const safeDisciplinas = useMemo(() => (Array.isArray(disciplinas) ? disciplinas : []).filter(Boolean), [disciplinas]);
+    const safeProtagonistas = useMemo(() => (Array.isArray(protagonistas) ? protagonistas : []).filter(Boolean), [protagonistas]);
+    const safeLancamentos = useMemo(() => (Array.isArray(lancamentos) ? lancamentos : []).filter(Boolean), [lancamentos]);
+    const safeAreas = useMemo(() => (Array.isArray(areas) ? areas : []).filter(Boolean), [areas]);
+    const safeSubformacoes = useMemo(() => (Array.isArray(subformacoes) ? subformacoes : []).filter(Boolean), [subformacoes]);
+    const safeFormacoes = useMemo(() => (Array.isArray(formacoes) ? formacoes : []).filter(Boolean), [formacoes]);
+    const safeConselhos = useMemo(() => (Array.isArray(conselhos) ? conselhos : []).filter(Boolean), [conselhos]);
 
     const [selTurma, setSelTurma] = useState('');
     const [bimRef, setBimRef] = useState<1 | 2 | 3 | 4>(4);
@@ -40,6 +40,8 @@ export default function ConselhoModule() {
     const [filterExpanded, setFilterExpanded] = useState(true);
     const [colsCollapsed, setColsCollapsed] = useState(false);
 
+    // CRITICAL: safeConselhos is now stabilized with useMemo above, so this effect
+    // only fires when actual server data changes – not on every re-render.
     useEffect(() => {
         setLocalConselhos(safeConselhos);
     }, [safeConselhos]);
