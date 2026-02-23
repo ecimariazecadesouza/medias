@@ -17,23 +17,50 @@ function SimpleBar({ value, max, color }: { value: number; max: number; color: s
 }
 
 export default function AnalysesModule() {
-    const { turmas, disciplinas, protagonistas, lancamentos, configuracao } = useGrades();
+    const { turmas, disciplinas, protagonistas, lancamentos, configuracao, areas, subformacoes, formacoes } = useGrades();
     const [filterTurma, setFilterTurma] = useState('');
+    const [filterFormacao, setFilterFormacao] = useState('');
+    const [filterSubformacao, setFilterSubformacao] = useState('');
+    const [filterArea, setFilterArea] = useState('');
     const [filterDisciplina, setFilterDisciplina] = useState('');
     const [filterBimestre, setFilterBimestre] = useState<string>('');
 
     const safeLancamentos = (Array.isArray(lancamentos) ? lancamentos : []).filter(Boolean);
     const safeDisciplinas = (Array.isArray(disciplinas) ? disciplinas : []).filter(Boolean);
     const safeTurmas = (Array.isArray(turmas) ? turmas : []).filter(Boolean);
+    const safeAreas = (Array.isArray(areas) ? areas : []).filter(Boolean);
+    const safeSubformacoes = (Array.isArray(subformacoes) ? subformacoes : []).filter(Boolean);
+    const safeFormacoes = (Array.isArray(formacoes) ? formacoes : []).filter(Boolean);
     const mediaMinima = configuracao?.mediaMinima || 6.0;
+
+    // Mapping hierarchy for easier filtering
+    const hierarchyMap = useMemo(() => {
+        const map: Record<string, { areaId: string; subId: string; formId: string }> = {};
+        safeDisciplinas.forEach(d => {
+            const area = safeAreas.find((a: any) => a.id === d.areaId);
+            const sub = safeSubformacoes.find((s: any) => s.id === area?.subformacaoId);
+            map[d.id] = {
+                areaId: d.areaId,
+                subId: area?.subformacaoId || '',
+                formId: sub?.formacaoId || ''
+            };
+        });
+        return map;
+    }, [safeDisciplinas, safeAreas, safeSubformacoes]);
 
     const filteredLans = useMemo(() => safeLancamentos.filter(l => {
         if (!l) return false;
         if (filterTurma && l.turmaId !== filterTurma) return false;
+
+        const h = hierarchyMap[l.disciplinaId];
+        if (filterFormacao && h?.formId !== filterFormacao) return false;
+        if (filterSubformacao && h?.subId !== filterSubformacao) return false;
+        if (filterArea && h?.areaId !== filterArea) return false;
         if (filterDisciplina && l.disciplinaId !== filterDisciplina) return false;
+
         if (filterBimestre && String(l.bimestre) !== filterBimestre) return false;
         return l.media !== null;
-    }), [safeLancamentos, filterTurma, filterDisciplina, filterBimestre]);
+    }), [safeLancamentos, filterTurma, filterFormacao, filterSubformacao, filterArea, filterDisciplina, filterBimestre, hierarchyMap]);
 
     const totalLancamentos = filteredLans.length;
     const aprovados = filteredLans.filter(l => (l.media ?? 0) >= mediaMinima).length;
@@ -56,13 +83,36 @@ export default function AnalysesModule() {
             .sort((a, b) => b.media - a.media);
     }, [filteredLans, disciplinas]);
 
-    // Médias por bimestre
+    // Médias por bimestre (para Evolução)
     const mediasByBimestre = useMemo(() => {
         return ([1, 2, 3, 4] as const).map(b => {
             const lans = filteredLans.filter(l => l.bimestre === b);
-            return { bimestre: b, media: lans.length > 0 ? lans.reduce((s, l) => s + (l.media ?? 0), 0) / lans.length : null };
+            return {
+                bimestre: b,
+                media: lans.length > 0 ? lans.reduce((s, l) => s + (l.media ?? 0), 0) / lans.length : null,
+                count: lans.length
+            };
         });
     }, [filteredLans]);
+
+    // Media por Área
+    const mediasByArea = useMemo(() => {
+        const map: Record<string, { sum: number; count: number; nome: string }> = {};
+        filteredLans.forEach(l => {
+            const h = hierarchyMap[l.disciplinaId];
+            if (h?.areaId) {
+                if (!map[h.areaId]) {
+                    const area = safeAreas.find(a => a.id === h.areaId);
+                    map[h.areaId] = { sum: 0, count: 0, nome: area?.nome || h.areaId };
+                }
+                map[h.areaId].sum += l.media ?? 0;
+                map[h.areaId].count++;
+            }
+        });
+        return Object.entries(map)
+            .map(([id, { sum, count, nome }]) => ({ id, nome, media: sum / count }))
+            .sort((a, b) => b.media - a.media);
+    }, [filteredLans, safeAreas, hierarchyMap]);
 
     // Media por turma
     const mediasByTurma = useMemo(() => {
@@ -75,7 +125,7 @@ export default function AnalysesModule() {
         return Object.entries(map).map(([id, { sum, count, nome }]) => ({ id, nome, media: sum / count })).sort((a, b) => b.media - a.media);
     }, [filteredLans, turmas]);
 
-    const maxMedia = Math.max(...mediasByDisciplina.map(d => d.media), 10);
+    const maxMedia = Math.max(...mediasByDisciplina.map(d => d.media), ...mediasByArea.map(a => a.media), 10);
 
     return (
         <>
@@ -86,10 +136,33 @@ export default function AnalysesModule() {
                         <option value="">Todas as turmas</option>
                         {safeTurmas.map(t => <option key={t?.id} value={t?.id}>{t?.nome}</option>)}
                     </select>
+
+                    <select className="select" style={{ width: 'auto' }} value={filterFormacao} onChange={e => { setFilterFormacao(e.target.value); setFilterSubformacao(''); setFilterArea(''); setFilterDisciplina(''); }}>
+                        <option value="">Todas as formações</option>
+                        {safeFormacoes.map((f: any) => <option key={f.id} value={f.id}>{f.nome}</option>)}
+                    </select>
+
+                    <select className="select" style={{ width: 'auto' }} value={filterSubformacao} onChange={e => { setFilterSubformacao(e.target.value); setFilterArea(''); setFilterDisciplina(''); }}>
+                        <option value="">Todas as subformações</option>
+                        {safeSubformacoes
+                            .filter((s: any) => !filterFormacao || s.formacaoId === filterFormacao)
+                            .map((s: any) => <option key={s.id} value={s.id}>{s.nome}</option>)}
+                    </select>
+
+                    <select className="select" style={{ width: 'auto' }} value={filterArea} onChange={e => { setFilterArea(e.target.value); setFilterDisciplina(''); }}>
+                        <option value="">Todas as áreas</option>
+                        {safeAreas
+                            .filter((a: any) => !filterSubformacao || a.subformacaoId === filterSubformacao)
+                            .map((a: any) => <option key={a.id} value={a.id}>{a.nome}</option>)}
+                    </select>
+
                     <select className="select" style={{ width: 'auto' }} value={filterDisciplina} onChange={e => setFilterDisciplina(e.target.value)}>
                         <option value="">Todas as disciplinas</option>
-                        {safeDisciplinas.map(d => <option key={d?.id} value={d?.id}>{d?.nome}</option>)}
+                        {safeDisciplinas
+                            .filter(d => !filterArea || d.areaId === filterArea)
+                            .map(d => <option key={d?.id} value={d?.id}>{d?.nome}</option>)}
                     </select>
+
                     <select className="select" style={{ width: 'auto' }} value={filterBimestre} onChange={e => setFilterBimestre(e.target.value)}>
                         <option value="">Todos os bimestres</option>
                         {[1, 2, 3, 4].map(b => <option key={b} value={b}>{b}º Bimestre</option>)}
@@ -186,37 +259,78 @@ export default function AnalysesModule() {
                     </div>
                 </div>
 
-                {/* Médias por bimestre */}
+                {/* Evolução das Médias */}
                 <div className="card">
-                    <div className="card-header"><div className="card-title">Médias por Bimestre</div></div>
+                    <div className="card-header"><div className="card-title">Evolução das Médias</div></div>
                     <div className="card-body">
-                        {mediasByBimestre.map(({ bimestre, media }) => (
-                            <div key={bimestre} style={{ marginBottom: '1rem' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.375rem' }}>
-                                    <span>{bimestre}º Bimestre</span>
-                                    <span style={{ color: media === null ? 'hsl(var(--muted-foreground))' : media >= mediaMinima ? 'hsl(var(--accent))' : 'hsl(var(--danger))' }}>
-                                        {media === null ? '—' : media.toFixed(2)}
-                                    </span>
+                        <div style={{ height: '180px', position: 'relative', marginTop: '1rem', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', paddingBottom: '2rem' }}>
+                            {/* Grid lines */}
+                            {[0, 2.5, 5, 7.5, 10].map(y => (
+                                <div key={y} style={{ position: 'absolute', width: '100%', height: '1px', background: 'hsl(var(--border)/0.5)', bottom: `${(y / 10) * 100}%` }}>
+                                    <span style={{ position: 'absolute', left: '-1.5rem', top: '-0.5rem', fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))' }}>{y}</span>
                                 </div>
-                                {media !== null ? (
-                                    <div style={{ height: '8px', background: 'hsl(var(--border))', borderRadius: '99px', overflow: 'hidden' }}>
-                                        <div style={{
-                                            width: `${(media / 10) * 100}%`, height: '100%', borderRadius: '99px',
-                                            background: media >= mediaMinima ? 'hsl(var(--accent))' : 'hsl(var(--danger))',
-                                            transition: 'width 0.5s ease'
-                                        }} />
+                            ))}
+
+                            {/* Line / Dots */}
+                            {mediasByBimestre.map((m, i) => {
+                                const next = mediasByBimestre[i + 1];
+                                const hasValue = m.media !== null;
+                                return (
+                                    <div key={m.bimestre} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', height: '100%' }}>
+                                        {hasValue && (
+                                            <>
+                                                <div style={{
+                                                    position: 'absolute', bottom: `${(m.media! / 10) * 100}%`, width: '10px', height: '10px',
+                                                    borderRadius: '50%', background: m.media! >= mediaMinima ? 'hsl(var(--accent))' : 'hsl(var(--danger))',
+                                                    border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', zIndex: 2
+                                                }} />
+                                                {next && next.media !== null && (
+                                                    <div style={{
+                                                        position: 'absolute', bottom: `${(m.media! / 10) * 100}%`, left: '50%', width: '100%',
+                                                        height: '2px', background: 'hsl(var(--accent)/0.3)',
+                                                        transform: `rotate(${Math.atan2(((next.media! - m.media!) / 10) * 180, 80) * (180 / Math.PI)}deg)`,
+                                                        transformOrigin: 'left center', zIndex: 1
+                                                    }} />
+                                                )}
+                                                <div style={{ position: 'absolute', bottom: `${(m.media! / 10) * 100 + 5}%`, fontSize: '0.75rem', fontWeight: 700 }}>{m.media!.toFixed(1)}</div>
+                                            </>
+                                        )}
+                                        <div style={{ position: 'absolute', bottom: '-1.5rem', fontSize: '0.8rem', fontWeight: 600 }}>{m.bimestre}º Bim</div>
                                     </div>
-                                ) : (
-                                    <div style={{ height: '8px', background: 'hsl(var(--border))', borderRadius: '99px' }} />
-                                )}
-                            </div>
-                        ))}
-                        <div style={{ marginTop: '1rem', padding: '0.625rem', background: 'hsl(var(--surface-raised))', borderRadius: 'var(--radius-sm)', fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))' }}>
+                                );
+                            })}
+                        </div>
+                        <div style={{ marginTop: '2rem', padding: '0.625rem', background: 'hsl(var(--surface-raised))', borderRadius: 'var(--radius-sm)', fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))' }}>
                             Média mínima: <strong style={{ color: 'hsl(var(--foreground))' }}>{mediaMinima.toFixed(1)}</strong>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* Médias por Área */}
+            {mediasByArea.length > 0 && (
+                <div className="card" style={{ marginBottom: '1.5rem' }}>
+                    <div className="card-header">
+                        <div className="card-title">Desempenho por Área de Conhecimento</div>
+                        <div className="card-subtitle">{mediasByArea.length} áreas analisadas</div>
+                    </div>
+                    <div className="card-body">
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                            {mediasByArea.map(a => (
+                                <div key={a.id} style={{ background: 'hsl(var(--surface-raised)/0.3)', padding: '1rem', borderRadius: 'var(--radius-sm)', border: '1px solid hsl(var(--border))' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                                        <span>{a.nome}</span>
+                                        <span style={{ color: a.media >= mediaMinima ? 'hsl(var(--accent))' : 'hsl(var(--danger))' }}>
+                                            {a.media.toFixed(2)}
+                                        </span>
+                                    </div>
+                                    <SimpleBar value={a.media} max={10} color={a.media >= mediaMinima ? 'hsl(var(--accent))' : 'hsl(var(--danger))'} />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Médias por disciplina */}
             {mediasByDisciplina.length > 0 && (
