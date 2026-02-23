@@ -294,7 +294,7 @@ function AppShell() {
               {activeTab === 'grade' && <GradeCurricularModule readOnly={isReadOnly} />}
               {activeTab === 'lancamento' && <LancamentoModule readOnly={isReadOnly} role={user?.role} userEmail={user?.email} />}
               {activeTab === 'analises' && <AnalysesModule />}
-              {activeTab === 'conselho' && <ConselhoModule />}
+              {activeTab === 'conselho' && <ConselhoModule readOnly={isReadOnly} />}
               {activeTab === 'boletins' && <BoletinsModule />}
               {activeTab === 'configuracoes' && <ConfiguracoesModule readOnly={isReadOnly} />}
             </div>

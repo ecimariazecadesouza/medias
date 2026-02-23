@@ -8,7 +8,7 @@ import type { Conselho } from '@/lib/types';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-export default function ConselhoModule() {
+export default function ConselhoModule({ readOnly = false }: { readOnly?: boolean }) {
     const {
         turmas, disciplinas, protagonistas, lancamentos, conselhos, configuracao,
         areas, subformacoes, formacoes,
@@ -695,20 +695,26 @@ export default function ConselhoModule() {
                                             </td>
                                             {/* Deliberação - Status */}
                                             <td style={{ padding: '0.5rem', borderLeft: '2px solid hsl(var(--border))', textAlign: 'center', background: 'hsl(var(--primary)/0.02)' }}>
-                                                <button
-                                                    onClick={() => handleDeliberationChange(p.id, 'deliberado', !isDeliberado)}
-                                                    style={{
-                                                        width: '2rem', height: '2rem', borderRadius: '0.625rem',
-                                                        border: isDeliberado ? 'none' : '1.5px solid hsl(var(--border))',
-                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                        cursor: 'pointer', margin: '0 auto', transition: 'all 0.15s',
-                                                        background: isDeliberado ? 'hsl(var(--primary))' : 'white',
-                                                        color: isDeliberado ? 'white' : 'hsl(var(--muted-foreground)/0.4)',
-                                                        boxShadow: isDeliberado ? '0 2px 8px hsl(var(--primary)/0.3)' : 'none',
-                                                        transform: isDeliberado ? 'scale(1.1)' : 'scale(1)'
-                                                    }}>
-                                                    <ShieldCheck size={14} />
-                                                </button>
+                                                {readOnly ? (
+                                                    <div style={{ width: '2rem', height: '2rem', borderRadius: '0.625rem', border: '1.5px solid hsl(var(--border))', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', background: isDeliberado ? 'hsl(var(--primary))' : 'hsl(var(--muted)/0.3)', color: isDeliberado ? 'white' : 'hsl(var(--muted-foreground)/0.3)' }}>
+                                                        <ShieldCheck size={14} />
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleDeliberationChange(p.id, 'deliberado', !isDeliberado)}
+                                                        style={{
+                                                            width: '2rem', height: '2rem', borderRadius: '0.625rem',
+                                                            border: isDeliberado ? 'none' : '1.5px solid hsl(var(--border))',
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            cursor: 'pointer', margin: '0 auto', transition: 'all 0.15s',
+                                                            background: isDeliberado ? 'hsl(var(--primary))' : 'white',
+                                                            color: isDeliberado ? 'white' : 'hsl(var(--muted-foreground)/0.4)',
+                                                            boxShadow: isDeliberado ? '0 2px 8px hsl(var(--primary)/0.3)' : 'none',
+                                                            transform: isDeliberado ? 'scale(1.1)' : 'scale(1)'
+                                                        }}>
+                                                        <ShieldCheck size={14} />
+                                                    </button>
+                                                )}
                                             </td>
 
                                             <td style={{ padding: '0.5rem', borderLeft: '1px solid hsl(var(--border-light))', background: 'hsl(var(--primary)/0.02)' }}>
