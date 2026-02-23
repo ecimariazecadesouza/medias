@@ -21,7 +21,11 @@ export default function TurmasModule({ readOnly = false }: { readOnly?: boolean 
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [toast, setToast] = useState('');
 
-    const anoLetivo = configuracao.anoLetivo || new Date().getFullYear().toString();
+    const safeTurmas = turmas || [];
+    const safeProtagonistas = protagonistas || [];
+    const safeDisciplinas = disciplinas || [];
+
+    const anoLetivo = (configuracao?.anoLetivo) || new Date().getFullYear().toString();
 
     const showMsg = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
 
@@ -54,7 +58,7 @@ export default function TurmasModule({ readOnly = false }: { readOnly?: boolean 
     };
 
     const handleDelete = async (t: Turma) => {
-        const count = protagonistas.filter(p => p.turmaId === t.id).length;
+        const count = safeProtagonistas.filter(p => p?.turmaId === t.id).length;
         if (!confirm(`Excluir turma "${t.nome}"?${count > 0 ? `\n${count} protagonista(s) ficarão sem turma.` : ''}`)) return;
         try {
             await api.turmas.delete(t.id);
@@ -67,17 +71,17 @@ export default function TurmasModule({ readOnly = false }: { readOnly?: boolean 
         'Manhã': 'badge-blue', 'Tarde': 'badge-amber', 'Noite': 'badge-gray', 'Integral': 'badge-green'
     };
 
-    const years = [...new Set(turmas.map(t => t.anoLetivo))].sort((a, b) => b.localeCompare(a));
+    const years = [...new Set(safeTurmas.map(t => t?.anoLetivo))].filter(Boolean).sort((a, b) => (b || '').localeCompare(a || ''));
 
     // Stats calculations
     const stats = useMemo(() => ({
-        totalTurmas: turmas.length,
-        totalProtagonistas: protagonistas.length,
-        cursando: protagonistas.filter(p => p.status === 'Cursando').length,
-        evasao: protagonistas.filter(p => p.status === 'Evasão').length,
-        transferencia: protagonistas.filter(p => p.status === 'Transferência').length,
-        outro: protagonistas.filter(p => p.status === 'Outro').length,
-    }), [turmas, protagonistas]);
+        totalTurmas: safeTurmas.length,
+        totalProtagonistas: safeProtagonistas.length,
+        cursando: safeProtagonistas.filter(p => p?.status === 'Cursando').length,
+        evasao: safeProtagonistas.filter(p => p?.status === 'Evasão').length,
+        transferencia: safeProtagonistas.filter(p => p?.status === 'Transferência').length,
+        outro: safeProtagonistas.filter(p => p?.status === 'Outro').length,
+    }), [safeTurmas, safeProtagonistas]);
 
     const getTurmaQuantitativos = (tId: string, discIds: string[]) => {
         const turmaProts = protagonistas.filter(p => p.turmaId === tId);

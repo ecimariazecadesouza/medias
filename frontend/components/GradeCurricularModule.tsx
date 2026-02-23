@@ -13,6 +13,11 @@ export default function GradeCurricularModule({ readOnly = false }: { readOnly?:
         areas, setAreas,
         disciplinas, setDisciplinas
     } = useGrades();
+
+    const safeFormacoes = formacoes || [];
+    const safeSubformacoes = subformacoes || [];
+    const safeAreas = areas || [];
+    const safeDisciplinas = disciplinas || [];
     // ... rest of logic
     const [expanded, setExpanded] = useState<Record<string, boolean>>({});
     type ModalState = { type: 'formacao' | 'subformacao' | 'area' | 'disciplina'; parentId?: string; editing?: any };
@@ -107,7 +112,7 @@ export default function GradeCurricularModule({ readOnly = false }: { readOnly?:
             <div className="stat-grid">
                 <div className="stat-card blue">
                     <span className="stat-card-label">Formações</span>
-                    <span className="stat-card-value">{formacoes.length}</span>
+                    <span className="stat-card-value">{safeFormacoes.length}</span>
                     <Layers size={48} className="stat-card-icon" />
                 </div>
                 <div className="stat-card green">
@@ -116,7 +121,7 @@ export default function GradeCurricularModule({ readOnly = false }: { readOnly?:
                 </div>
                 <div className="stat-card amber">
                     <span className="stat-card-label">Disciplinas</span>
-                    <span className="stat-card-value">{totalDisciplinas}</span>
+                    <span className="stat-card-value">{safeDisciplinas?.length || 0}</span>
                     <BookOpen size={48} className="stat-card-icon" />
                 </div>
             </div>
@@ -148,7 +153,7 @@ export default function GradeCurricularModule({ readOnly = false }: { readOnly?:
                         </div>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                            {formacoes.map(f => (
+                            {safeFormacoes.map(f => (
                                 <div key={f.id} style={{ border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
                                     {/* Formação */}
                                     <div style={{

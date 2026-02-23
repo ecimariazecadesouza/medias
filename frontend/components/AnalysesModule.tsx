@@ -22,14 +22,18 @@ export default function AnalysesModule() {
     const [filterDisciplina, setFilterDisciplina] = useState('');
     const [filterBimestre, setFilterBimestre] = useState<string>('');
 
-    const mediaMinima = configuracao.mediaMinima;
+    const safeLancamentos = lancamentos || [];
+    const safeDisciplinas = disciplinas || [];
+    const safeTurmas = turmas || [];
+    const mediaMinima = configuracao?.mediaMinima || 6.0;
 
-    const filteredLans = useMemo(() => lancamentos.filter(l => {
+    const filteredLans = useMemo(() => safeLancamentos.filter(l => {
+        if (!l) return false;
         if (filterTurma && l.turmaId !== filterTurma) return false;
         if (filterDisciplina && l.disciplinaId !== filterDisciplina) return false;
         if (filterBimestre && String(l.bimestre) !== filterBimestre) return false;
         return l.media !== null;
-    }), [lancamentos, filterTurma, filterDisciplina, filterBimestre]);
+    }), [safeLancamentos, filterTurma, filterDisciplina, filterBimestre]);
 
     const totalLancamentos = filteredLans.length;
     const aprovados = filteredLans.filter(l => (l.media ?? 0) >= mediaMinima).length;
@@ -80,11 +84,11 @@ export default function AnalysesModule() {
                 <div className="filters-bar" style={{ border: 'none' }}>
                     <select className="select" style={{ width: 'auto' }} value={filterTurma} onChange={e => setFilterTurma(e.target.value)}>
                         <option value="">Todas as turmas</option>
-                        {turmas.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
+                        {safeTurmas.map(t => <option key={t?.id} value={t?.id}>{t?.nome}</option>)}
                     </select>
                     <select className="select" style={{ width: 'auto' }} value={filterDisciplina} onChange={e => setFilterDisciplina(e.target.value)}>
                         <option value="">Todas as disciplinas</option>
-                        {disciplinas.map(d => <option key={d.id} value={d.id}>{d.nome}</option>)}
+                        {safeDisciplinas.map(d => <option key={d?.id} value={d?.id}>{d?.nome}</option>)}
                     </select>
                     <select className="select" style={{ width: 'auto' }} value={filterBimestre} onChange={e => setFilterBimestre(e.target.value)}>
                         <option value="">Todos os bimestres</option>

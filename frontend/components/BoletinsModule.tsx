@@ -11,20 +11,25 @@ export default function BoletinsModule() {
     const [selProtagonista, setSelProtagonista] = useState('');
     const printRef = useRef<HTMLDivElement>(null);
 
-    const mediaMinima = configuracao.mediaMinima;
-    const turmaProts = protagonistas.filter(p => p.turmaId === selTurma && p.status === 'Cursando');
-    const protagonist = protagonistas.find(p => p.id === selProtagonista);
-    const turma = turmas.find(t => t.id === selTurma);
+    const mediaMinima = configuracao?.mediaMinima || 6.0;
+    const safeProtagonistas = protagonistas || [];
+    const safeTurmas = turmas || [];
+    const safeLancamentos = lancamentos || [];
+    const safeDisciplinas = disciplinas || [];
+
+    const turmaProts = safeProtagonistas.filter(p => p?.turmaId === selTurma && p?.status === 'Cursando');
+    const protagonist = safeProtagonistas.find(p => p?.id === selProtagonista);
+    const turma = safeTurmas.find(t => t?.id === selTurma);
 
     const turmaDiscs = useMemo(() => {
         if (!turma) return [];
         let list = [];
-        if (turma.disciplinaIds && turma.disciplinaIds.length > 0) {
-            list = disciplinas.filter(d => (turma.disciplinaIds || []).includes(d.id));
+        if (turma?.disciplinaIds && turma?.disciplinaIds?.length > 0) {
+            list = safeDisciplinas.filter(d => (turma?.disciplinaIds || []).includes(d?.id));
         } else {
             // Fallback: disciplinas que já possuem lançamentos para esta turma
-            const idsComLancamento = [...new Set(lancamentos.filter(l => l.turmaId === selTurma).map(l => l.disciplinaId))];
-            list = disciplinas.filter(d => idsComLancamento.includes(d.id));
+            const idsComLancamento = [...new Set(safeLancamentos.filter(l => l?.turmaId === selTurma).map(l => l?.disciplinaId))];
+            list = safeDisciplinas.filter(d => idsComLancamento.includes(d?.id));
         }
 
         // Ordenar por Subformação (nome) e depois por Disciplina (nome)
