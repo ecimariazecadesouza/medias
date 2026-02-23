@@ -351,6 +351,7 @@ export default function BoletinsModule() {
                                         ))}
                                         <th style={{ padding: '1rem 0.5rem', textAlign: 'center', fontWeight: 800, fontSize: '0.7rem' }}>RF</th>
                                         <th style={{ padding: '1rem 0.75rem', textAlign: 'center', fontWeight: 800, fontSize: '0.7rem', background: 'hsl(var(--primary)/0.05)', borderRadius: '0.5rem 0.5rem 0 0' }}>Média Final</th>
+                                        <th style={{ padding: '1rem 0.75rem', textAlign: 'center', fontWeight: 800, fontSize: '0.7rem' }}>Desempenho</th>
                                         <th style={{ padding: '1rem 0.75rem', textAlign: 'center', fontWeight: 800, fontSize: '0.7rem' }}>Situação</th>
                                     </tr>
                                 </thead>
@@ -366,6 +367,8 @@ export default function BoletinsModule() {
                                         const mg = getMG(protagonist.id, d.id);
                                         const mf = getMF(protagonist.id, d.id);
                                         const sit = getSituacao(protagonist.id, d.id);
+                                        const effectiveGrade = mf ?? mg;
+                                        const performance = effectiveGrade === null ? '---' : effectiveGrade >= 8 ? 'ÓTIMO' : effectiveGrade >= 6 ? 'BOM' : effectiveGrade >= 5 ? 'REGULAR' : 'INSUFICIENTE';
                                         return (
                                             <tr key={d.id} style={{ background: i % 2 === 0 ? 'white' : 'hsl(var(--surface-raised)/0.5)' }}>
                                                 <td style={{ padding: '0.875rem 0.75rem', fontWeight: 700, borderRadius: '0.5rem 0 0 0.5rem' }}>
@@ -392,8 +395,11 @@ export default function BoletinsModule() {
                                                 <td style={{ padding: '0.875rem 0.5rem', textAlign: 'center', fontWeight: 600, color: situacaoColor(rf, 5) }}>
                                                     {formatMedia(rf, 5)}
                                                 </td>
-                                                <td style={{ padding: '0.875rem 0.75rem', textAlign: 'center', fontWeight: 900, fontSize: '1rem', color: situacaoColor(mf ?? mg), background: 'hsl(var(--primary)/0.03)' }}>
+                                                <td style={{ padding: '0.875rem 0.75rem', textAlign: 'center', fontWeight: 900, fontSize: '1rem', color: situacaoColor(effectiveGrade), background: 'hsl(var(--primary)/0.03)' }}>
                                                     {formatMedia(mf ?? mg)}
+                                                </td>
+                                                <td style={{ padding: '0.875rem 0.75rem', textAlign: 'center', fontWeight: 800, fontSize: '0.75rem', color: situacaoColor(effectiveGrade) }}>
+                                                    {performance}
                                                 </td>
                                                 <td style={{ padding: '0.875rem 0.75rem', textAlign: 'center', borderRadius: '0 0.5rem 0.5rem 0' }}>
                                                     <span style={{
