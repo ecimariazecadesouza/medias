@@ -151,10 +151,11 @@ export function GradesProvider({ children }: { children: React.ReactNode }) {
 
             if (mg >= 6.0) return mg;
 
-            const rf = lancamentos.find(l =>
-                l.protagonistaId === protagonistaId &&
-                l.disciplinaId === disciplinaId &&
-                l.bimestre === 5
+            const safeLancamentos = lancamentos || [];
+            const rf = safeLancamentos.find(l =>
+                l?.protagonistaId === protagonistaId &&
+                l?.disciplinaId === disciplinaId &&
+                l?.bimestre === 5
             )?.media;
 
             if (rf === null || rf === undefined) return null;
@@ -178,7 +179,11 @@ export function GradesProvider({ children }: { children: React.ReactNode }) {
                 if (pontos < 10) return 'Inapto';
                 if (mg !== null && mg >= 6.0) return 'Aprovar';
 
-                const rfNote = safeLancamentos.find(l => l.protagonistaId === protagonistaId && l.disciplinaId === disciplinaId && l.bimestre === 5)?.media;
+                const rfNote = safeLancamentos.find(l =>
+                    l?.protagonistaId === protagonistaId &&
+                    l?.disciplinaId === disciplinaId &&
+                    l?.bimestre === 5
+                )?.media;
                 if (rfNote === null || rfNote === undefined) return 'Recuperação';
 
                 const mf = getMF(protagonistaId, disciplinaId);

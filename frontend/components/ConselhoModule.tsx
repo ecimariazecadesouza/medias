@@ -49,11 +49,11 @@ export default function ConselhoModule() {
         [areas, selSubformacao]
     );
 
-    const turmaProtsAll = useMemo(() =>
-        protagonistas.filter(p => p.turmaId === selTurma && (statusFilter === 'Todos' || p.status === 'Cursando'))
-            .sort((a, b) => a.nome.localeCompare(b.nome)),
-        [selTurma, protagonistas, statusFilter]
-    );
+    const turmaProtsAll = useMemo(() => {
+        const safeProtagonistas = protagonistas || [];
+        return safeProtagonistas.filter(p => p?.turmaId === selTurma && (statusFilter === 'Todos' || p?.status === 'Cursando'))
+            .sort((a, b) => (a?.nome || '').localeCompare(b?.nome || ''));
+    }, [selTurma, protagonistas, statusFilter]);
 
     const turmaDiscs = useMemo(() => {
         if (!selTurma) return [];
@@ -94,10 +94,11 @@ export default function ConselhoModule() {
 
     // Refined Simulation Logic
     const getSimulationData = (pId: string, dId: string) => {
-        const discLans = lancamentos.filter(l => l.protagonistaId === pId && l.disciplinaId === dId);
-        const regularLans = discLans.filter(l => l.bimestre >= 1 && l.bimestre <= bimRef);
-        const sum = regularLans.reduce((acc, l) => acc + (l.media || 0), 0);
-        const filledCount = regularLans.filter(l => l.media !== null).length;
+        const safeLancamentos = lancamentos || [];
+        const discLans = safeLancamentos.filter(l => l?.protagonistaId === pId && l?.disciplinaId === dId);
+        const regularLans = discLans.filter(l => l?.bimestre >= 1 && l?.bimestre <= bimRef);
+        const sum = regularLans.reduce((acc, l) => acc + (l?.media || 0), 0);
+        const filledCount = regularLans.filter(l => l?.media !== null).length;
 
         let mf: number | null = null;
         const mg = bimRef > 0 ? (sum / bimRef) : 0;

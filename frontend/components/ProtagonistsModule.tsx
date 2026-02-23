@@ -289,33 +289,40 @@ export default function ProtagonistsModule({ readOnly = false }: { readOnly?: bo
                                 </tr>
                             </thead>
                             <tbody>
-                                {paginated.map((p, i) => (
-                                    <tr key={p.id}>
-                                        <td style={{ color: 'var(--muted-foreground)', fontSize: '0.8rem' }}>
-                                            {(page - 1) * PER_PAGE + i + 1}
-                                        </td>
-                                        <td style={{ fontWeight: 600 }}>{p.nome}</td>
-                                        <td style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{p.matricula}</td>
-                                        <td>
-                                            <span className="badge badge-blue">
-                                                {p.turmaNome || getTurmaName(p.turmaId)}
-                                            </span>
-                                        </td>
-                                        <td><span className={`badge ${statusBadge(p.status)}`}>{p.status}</span></td>
-                                        <td style={{ textAlign: 'right' }}>
-                                            {!readOnly && (
-                                                <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end' }}>
-                                                    <button className="btn btn-ghost btn-icon btn-sm" onClick={() => openEdit(p)}>
-                                                        <Pencil size={15} />
-                                                    </button>
-                                                    <button className="btn btn-ghost btn-icon btn-sm" onClick={() => handleDelete(p)} style={{ color: 'hsl(var(--danger))' }}>
-                                                        <Trash2 size={15} />
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
+                                {paginated.map((p, i) => {
+                                    if (!p) return null;
+                                    return (
+                                        <tr key={p.id || i}>
+                                            <td style={{ color: 'var(--muted-foreground)', fontSize: '0.8rem' }}>
+                                                {(page - 1) * PER_PAGE + i + 1}
+                                            </td>
+                                            <td style={{ fontWeight: 600 }}>{p.nome || '—'}</td>
+                                            <td style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{p.matricula || '—'}</td>
+                                            <td>
+                                                <span className="badge badge-blue">
+                                                    {p.turmaNome || getTurmaName(p.turmaId || '')}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span className={`badge ${statusBadge(p.status || 'Outro' as any)}`}>
+                                                    {p.status || 'Outro'}
+                                                </span>
+                                            </td>
+                                            <td style={{ textAlign: 'right' }}>
+                                                {!readOnly && (
+                                                    <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end' }}>
+                                                        <button className="btn btn-ghost btn-icon btn-sm" onClick={() => openEdit(p)}>
+                                                            <Pencil size={15} />
+                                                        </button>
+                                                        <button className="btn btn-ghost btn-icon btn-sm" onClick={() => handleDelete(p)} style={{ color: 'hsl(var(--danger))' }}>
+                                                            <Trash2 size={15} />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     )}
