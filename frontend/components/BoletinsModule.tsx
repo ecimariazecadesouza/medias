@@ -9,6 +9,7 @@ export default function BoletinsModule() {
     const { turmas, protagonistas, disciplinas, lancamentos, configuracao, getMG, getMF, getSituacao, areas, subformacoes } = useGrades();
     const [selTurma, setSelTurma] = useState('');
     const [selProtagonista, setSelProtagonista] = useState('');
+    const [selSituacao, setSelSituacao] = useState<'Cursando' | 'Evasão' | 'Transferência' | 'Outro'>('Cursando');
     const [generating, setGenerating] = useState(false);
     const printRef = useRef<HTMLDivElement>(null);
 
@@ -18,7 +19,9 @@ export default function BoletinsModule() {
     const safeLancamentos = (Array.isArray(lancamentos) ? lancamentos : []).filter(Boolean);
     const safeDisciplinas = (Array.isArray(disciplinas) ? disciplinas : []).filter(Boolean);
 
-    const turmaProts = safeProtagonistas.filter(p => p?.turmaId === selTurma && p?.status === 'Cursando');
+    const turmaProts = safeProtagonistas
+        .filter(p => p?.turmaId === selTurma && p?.status === selSituacao)
+        .sort((a, b) => (a?.nome || '').localeCompare(b?.nome || ''));
     const protagonist = safeProtagonistas.find(p => p?.id === selProtagonista);
     const turma = safeTurmas.find(t => t?.id === selTurma);
 
@@ -236,6 +239,16 @@ export default function BoletinsModule() {
                             </select>
                         </div>
                         {selTurma && (
+                            <div className="form-group" style={{ flex: '1', minWidth: '180px', maxWidth: '220px' }}>
+                                <label className="label">Situação</label>
+                                <select className="select" value={selSituacao} onChange={e => { setSelSituacao(e.target.value as any); setSelProtagonista(''); }}>
+                                    <option value="Cursando">Cursando</option>
+                                    <option value="Evasão">Evasão</option>
+                                    <option value="Transferência">Transferência</option>
+                                    <option value="Outro">Outro</option>
+                                </select>
+                            </div>
+                        )}{selTurma && (
                             <div className="form-group" style={{ flex: '1', minWidth: '240px', maxWidth: '300px' }}>
                                 <label className="label">Protagonista Individual</label>
                                 <select className="select" value={selProtagonista} onChange={e => setSelProtagonista(e.target.value)}>
