@@ -87,7 +87,9 @@ export default function ConselhoModule() {
         if (!selTurma) return [];
         const linkedIds = activeTurma?.disciplinaIds || [];
         const gradedIds = new Set(lancamentos.filter(l => l.turmaId === selTurma).map(l => l.disciplinaId));
-        return disciplinas.filter(d => linkedIds.includes(d.id) || gradedIds.has(d.id));
+        return disciplinas
+            .filter(d => linkedIds.includes(d.id) || gradedIds.has(d.id))
+            .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
     }, [selTurma, activeTurma, disciplinas, lancamentos]);
 
     // Refined Simulation Logic
