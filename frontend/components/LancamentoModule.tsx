@@ -21,7 +21,7 @@ export default function LancamentoModule({ readOnly = false, role, userEmail }: 
 
     // Filtros para Docente
     const isDocente = role === 'Docente';
-    const docenteProfile = isDocente ? safeDocentes.find(d => d?.email?.toLowerCase() === userEmail?.toLowerCase()) : null;
+    const docenteProfile = isDocente ? safeDocentes.find(d => String(d?.email || '').toLowerCase() === String(userEmail || '').toLowerCase()) : null;
 
     // Se for docente, filtra apenas suas turmas e disciplinas
     const turmas = isDocente && docenteProfile
@@ -146,8 +146,8 @@ export default function LancamentoModule({ readOnly = false, role, userEmail }: 
         rows.forEach(row => {
             const cols = row.split('\t');
             if (cols.length < 2) return;
-            const name = cols[0].trim().toLowerCase();
-            const prot = turmaProts.find(p => p?.nome?.toLowerCase() === name);
+            const name = String(cols[0] || '').trim().toLowerCase();
+            const prot = turmaProts.find(p => String(p?.nome || '').toLowerCase() === name);
             if (prot) {
                 // Suporta colando Nome [TAB] B1 [TAB] B2 [TAB] B3 [TAB] B4 [TAB] RF
                 for (let i = 1; i <= 5; i++) {
@@ -448,7 +448,7 @@ export default function LancamentoModule({ readOnly = false, role, userEmail }: 
                                                     </td>
                                                     <td className="text-center mf-cell bold-text">{mf !== null ? mf.toFixed(1) : '–'}</td>
                                                     <td className="text-center">
-                                                        <span className={`badge-master badge-${sit.toLowerCase().replace(' ', '-')}`}>
+                                                        <span className={`badge-master badge-${String(sit || '').toLowerCase().replace(' ', '-')}`}>
                                                             {sit}
                                                         </span>
                                                     </td>

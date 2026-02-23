@@ -39,7 +39,7 @@ export default function DocentesModule({ readOnly = false }: { readOnly?: boolea
         if (!form.email.trim()) { showMsg('E-mail é obrigatório'); return; }
 
         // Verifica se já existe outro docente com este e-mail (excetuando o que está sendo editado)
-        const duplicate = docentes.find(d => d.email.toLowerCase() === form.email.toLowerCase() && d.id !== editing?.id);
+        const duplicate = docentes.find(d => String(d?.email || '').toLowerCase() === String(form.email || '').toLowerCase() && d.id !== editing?.id);
         if (duplicate) {
             showMsg('Este e-mail já está cadastrado para outro docente.');
             return;
@@ -108,8 +108,8 @@ export default function DocentesModule({ readOnly = false }: { readOnly?: boolea
 
     const safeDocentes = (Array.isArray(docentes) ? docentes : []).filter(Boolean);
     const filtered = safeDocentes.filter(d => {
-        const q = search.toLowerCase();
-        return !q || d.nome.toLowerCase().includes(q) || d.email.toLowerCase().includes(q);
+        const q = String(search || '').toLowerCase();
+        return !q || String(d?.nome || '').toLowerCase().includes(q) || String(d?.email || '').toLowerCase().includes(q);
     });
 
     const getDisciplinaName = (id: string) => disciplinas.find(d => d.id === id)?.nome || id;

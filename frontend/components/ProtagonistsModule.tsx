@@ -157,7 +157,7 @@ export default function ProtagonistsModule({ readOnly = false }: { readOnly?: bo
             const lines = text.trim().split('\n').slice(1);
             const rows: Protagonist[] = lines.map(line => {
                 const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
-                const turma = turmas.find(t => t.nome.toLowerCase() === (cols[2] || '').toLowerCase());
+                const turma = turmas.find(t => String(t.nome || '').toLowerCase() === String(cols[2] || '').toLowerCase());
                 return {
                     id: newId(),
                     nome: cols[0] || '',
@@ -186,9 +186,9 @@ export default function ProtagonistsModule({ readOnly = false }: { readOnly?: bo
 
     const filtered = safeProtagonistas.filter(p => {
         if (!p) return false;
-        const q = (search || '').toLowerCase();
-        const nome = (p.nome || '').toLowerCase();
-        const matricula = (p.matricula || '').toLowerCase();
+        const q = String(search || '').toLowerCase();
+        const nome = String(p.nome || '').toLowerCase();
+        const matricula = String(p.matricula || '').toLowerCase();
 
         const matchSearch = !q || nome.includes(q) || matricula.includes(q);
         const matchTurma = !filterTurma || p.turmaId === filterTurma;
