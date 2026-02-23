@@ -86,7 +86,12 @@ export function GradesProvider({ children }: { children: React.ReactNode }) {
     const safe = async <T,>(fn: () => Promise<T>, setter: (v: T) => void, defaultValue: T) => {
         try {
             const val = await fn();
-            setter(val ?? defaultValue);
+            // Level 4 Shielding: Enforce array type if default is an array
+            if (Array.isArray(defaultValue)) {
+                setter((Array.isArray(val) ? val : defaultValue) as T);
+            } else {
+                setter(val ?? defaultValue);
+            }
         } catch { /* silently skip on local dev */ }
     };
 
@@ -129,7 +134,7 @@ export function GradesProvider({ children }: { children: React.ReactNode }) {
             if (!disc) return null;
 
             const relevantBims = [1, 2, 3, 4];
-            const lans = safeLancamentos.filter(
+            const lans = (Array.isArray(safeLancamentos) ? safeLancamentos : []).filter(
                 l => l?.protagonistaId === protagonistaId &&
                     l?.disciplinaId === disciplinaId &&
                     relevantBims.includes(l?.bimestre as any) &&
@@ -169,12 +174,12 @@ export function GradesProvider({ children }: { children: React.ReactNode }) {
         (protagonistaId: string, disciplinaId: string): 'Aprovado' | 'Aprovar' | 'Reprovado' | 'Recuperação' | 'Retido' | 'Pendente' | 'Inapto' | 'Cursando' | 'Em curso' => {
             const safeLancamentos = (lancamentos || []).filter(Boolean);
             const mg = getMG(protagonistaId, disciplinaId);
-            const lRegular = safeLancamentos.filter(l =>
+            const lRegular = (Array.isArray(safeLancamentos) ? safeLancamentos : []).filter(l =>
                 l?.protagonistaId === protagonistaId &&
                 l?.disciplinaId === disciplinaId &&
                 l?.bimestre !== undefined &&
-                l?.bimestre <= 4 &&
-                l?.media !== null
+                l?.media !== null &&
+                l?.bimestre <= 4
             );
             const pontos = lRegular.reduce((acc, l) => acc + (l?.media || 0), 0);
 

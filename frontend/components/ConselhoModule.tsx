@@ -15,14 +15,14 @@ export default function ConselhoModule() {
         refreshConselho
     } = useGrades();
 
-    const safeTurmas = (turmas || []).filter(Boolean);
-    const safeDisciplinas = (disciplinas || []).filter(Boolean);
-    const safeProtagonistas = (protagonistas || []).filter(Boolean);
-    const safeLancamentos = (lancamentos || []).filter(Boolean);
-    const safeAreas = (areas || []).filter(Boolean);
-    const safeSubformacoes = (subformacoes || []).filter(Boolean);
-    const safeFormacoes = (formacoes || []).filter(Boolean);
-    const safeConselhos = (conselhos || []).filter(Boolean);
+    const safeTurmas = (Array.isArray(turmas) ? turmas : []).filter(Boolean);
+    const safeDisciplinas = (Array.isArray(disciplinas) ? disciplinas : []).filter(Boolean);
+    const safeProtagonistas = (Array.isArray(protagonistas) ? protagonistas : []).filter(Boolean);
+    const safeLancamentos = (Array.isArray(lancamentos) ? lancamentos : []).filter(Boolean);
+    const safeAreas = (Array.isArray(areas) ? areas : []).filter(Boolean);
+    const safeSubformacoes = (Array.isArray(subformacoes) ? subformacoes : []).filter(Boolean);
+    const safeFormacoes = (Array.isArray(formacoes) ? formacoes : []).filter(Boolean);
+    const safeConselhos = (Array.isArray(conselhos) ? conselhos : []).filter(Boolean);
 
     const [selTurma, setSelTurma] = useState('');
     const [bimRef, setBimRef] = useState<1 | 2 | 3 | 4>(4);
@@ -58,8 +58,9 @@ export default function ConselhoModule() {
     );
 
     const turmaProtsAll = useMemo(() => {
-        const safeProtagonistas = protagonistas || [];
-        return safeProtagonistas.filter(p => p?.turmaId === selTurma && (statusFilter === 'Todos' || p?.status === 'Cursando'))
+        const rawP = protagonistas || [];
+        const safeP = (Array.isArray(rawP) ? rawP : []).filter(Boolean);
+        return safeP.filter(p => p?.turmaId === selTurma && (statusFilter === 'Todos' || p?.status === 'Cursando'))
             .sort((a, b) => (a?.nome || '').localeCompare(b?.nome || ''));
     }, [selTurma, protagonistas, statusFilter]);
 

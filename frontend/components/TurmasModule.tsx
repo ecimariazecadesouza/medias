@@ -14,9 +14,9 @@ const empty = (): Omit<Turma, 'id'> => ({
 
 export default function TurmasModule({ readOnly = false }: { readOnly?: boolean }) {
     const { turmas, setTurmas, protagonistas, disciplinas, configuracao, getSituacao } = useGrades();
-    const safeTurmas = (turmas || []).filter(Boolean);
-    const safeProtagonistas = (protagonistas || []).filter(Boolean);
-    const safeDisciplinas = (disciplinas || []).filter(Boolean);
+    const safeTurmas = (Array.isArray(turmas) ? turmas : []).filter(Boolean);
+    const safeProtagonistas = (Array.isArray(protagonistas) ? protagonistas : []).filter(Boolean);
+    const safeDisciplinas = (Array.isArray(disciplinas) ? disciplinas : []).filter(Boolean);
 
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState<Turma | null>(null);

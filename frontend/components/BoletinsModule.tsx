@@ -12,10 +12,10 @@ export default function BoletinsModule() {
     const printRef = useRef<HTMLDivElement>(null);
 
     const mediaMinima = configuracao?.mediaMinima || 6.0;
-    const safeProtagonistas = protagonistas || [];
-    const safeTurmas = turmas || [];
-    const safeLancamentos = lancamentos || [];
-    const safeDisciplinas = disciplinas || [];
+    const safeProtagonistas = (Array.isArray(protagonistas) ? protagonistas : []).filter(Boolean);
+    const safeTurmas = (Array.isArray(turmas) ? turmas : []).filter(Boolean);
+    const safeLancamentos = (Array.isArray(lancamentos) ? lancamentos : []).filter(Boolean);
+    const safeDisciplinas = (Array.isArray(disciplinas) ? disciplinas : []).filter(Boolean);
 
     const turmaProts = safeProtagonistas.filter(p => p?.turmaId === selTurma && p?.status === 'Cursando');
     const protagonist = safeProtagonistas.find(p => p?.id === selProtagonista);

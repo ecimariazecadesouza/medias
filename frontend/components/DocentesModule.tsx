@@ -106,7 +106,8 @@ export default function DocentesModule({ readOnly = false }: { readOnly?: boolea
         } catch { showMsg('Erro ao excluir.'); }
     };
 
-    const filtered = docentes.filter(d => {
+    const safeDocentes = (Array.isArray(docentes) ? docentes : []).filter(Boolean);
+    const filtered = safeDocentes.filter(d => {
         const q = search.toLowerCase();
         return !q || d.nome.toLowerCase().includes(q) || d.email.toLowerCase().includes(q);
     });
@@ -125,12 +126,12 @@ export default function DocentesModule({ readOnly = false }: { readOnly?: boolea
             <div className="stat-grid">
                 <div className="stat-card blue">
                     <span className="stat-card-label">Total de Docentes</span>
-                    <span className="stat-card-value">{docentes.length}</span>
+                    <span className="stat-card-value">{(Array.isArray(docentes) ? docentes : []).length}</span>
                     <GraduationCap size={48} className="stat-card-icon" />
                 </div>
                 <div className="stat-card green">
                     <span className="stat-card-label">Vínculos Ativos</span>
-                    <span className="stat-card-value">{docentes.reduce((acc, d) => acc + (d.vinculos?.length || 0), 0)}</span>
+                    <span className="stat-card-value">{(Array.isArray(docentes) ? docentes : []).reduce((acc, d) => acc + (d.vinculos?.length || 0), 0)}</span>
                 </div>
             </div>
 

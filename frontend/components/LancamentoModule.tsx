@@ -12,11 +12,12 @@ export default function LancamentoModule({ readOnly = false, role, userEmail }: 
         turmas: allTurmas, disciplinas: allDisciplinas, protagonistas, lancamentos, setLancamentos,
         configuracao, docentes, getMG, getMF, getSituacao
     } = useGrades();
-    const safeTurmas = (allTurmas || []).filter(Boolean);
-    const safeDisciplinas = (allDisciplinas || []).filter(Boolean);
-    const safeDocentes = (docentes || []).filter(Boolean);
-    const safeProtagonistas = (protagonistas || []).filter(Boolean);
-    const safeLancamentos = (lancamentos || []).filter(Boolean);
+    const safeTurmas = (Array.isArray(allTurmas) ? allTurmas : []).filter(Boolean);
+    const safeDisciplinas = (Array.isArray(allDisciplinas) ? allDisciplinas : []).filter(Boolean);
+    const safeDocentes = (Array.isArray(docentes) ? docentes : []).filter(Boolean);
+    const rawProts = protagonistas || [];
+    const safeProtagonistas = (Array.isArray(rawProts) ? rawProts : []).filter(Boolean);
+    const safeLancamentos = (Array.isArray(lancamentos) ? lancamentos : []).filter(Boolean);
 
     // Filtros para Docente
     const isDocente = role === 'Docente';
@@ -70,7 +71,8 @@ export default function LancamentoModule({ readOnly = false, role, userEmail }: 
 
     // BUG FIX: Stabilize turmaProts to prevent loadGrades effect from running on every keystroke
     const turmaProts = useMemo(() => {
-        const safeProts = protagonistas || [];
+        const rawP = protagonistas || [];
+        const safeProts = (Array.isArray(rawP) ? rawP : []).filter(Boolean);
         return safeProts
             .filter(p => p?.turmaId === selTurma && p?.status === selSituacao)
             .sort((a, b) => (a?.nome || '').localeCompare(b?.nome || ''));

@@ -22,9 +22,9 @@ export default function AnalysesModule() {
     const [filterDisciplina, setFilterDisciplina] = useState('');
     const [filterBimestre, setFilterBimestre] = useState<string>('');
 
-    const safeLancamentos = (lancamentos || []).filter(Boolean);
-    const safeDisciplinas = (disciplinas || []).filter(Boolean);
-    const safeTurmas = (turmas || []).filter(Boolean);
+    const safeLancamentos = (Array.isArray(lancamentos) ? lancamentos : []).filter(Boolean);
+    const safeDisciplinas = (Array.isArray(disciplinas) ? disciplinas : []).filter(Boolean);
+    const safeTurmas = (Array.isArray(turmas) ? turmas : []).filter(Boolean);
     const mediaMinima = configuracao?.mediaMinima || 6.0;
 
     const filteredLans = useMemo(() => safeLancamentos.filter(l => {

@@ -179,8 +179,10 @@ export default function ProtagonistsModule({ readOnly = false }: { readOnly?: bo
         e.target.value = '';
     };
 
-    const safeProtagonistas = (protagonistas || []).filter(Boolean);
-    const safeTurmas = (turmas || []).filter(Boolean);
+    const rawProts = protagonistas || [];
+    const safeProtagonistas = (Array.isArray(rawProts) ? rawProts : []).filter(Boolean);
+    const rawTurmas = turmas || [];
+    const safeTurmas = (Array.isArray(rawTurmas) ? rawTurmas : []).filter(Boolean);
 
     const filtered = safeProtagonistas.filter(p => {
         if (!p) return false;
