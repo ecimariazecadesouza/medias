@@ -214,7 +214,9 @@ function AppShell() {
   const current = moduleTitles[activeTab];
 
   // Regras de Edição (Somente Admin e Docente podem editar, e com restrições)
-  const isReadOnly = user?.role !== 'Administrador' && user?.role !== 'Docente' && (user?.role as any) !== 'Admin';
+  // Somente Administrador pode adicionar/editar/excluir registros
+  // Docente pode lançar médias (LancamentoModule tem sua própria lógica de role)
+  const isReadOnly = user?.role !== 'Administrador' && (user?.role as any) !== 'Admin';
 
   return (
     <div className="app-shell">
