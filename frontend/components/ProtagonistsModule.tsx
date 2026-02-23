@@ -180,8 +180,11 @@ export default function ProtagonistsModule({ readOnly = false }: { readOnly?: bo
     };
 
     const filtered = protagonistas.filter(p => {
-        const q = search.toLowerCase();
-        const matchSearch = !q || p.nome.toLowerCase().includes(q) || p.matricula.includes(q);
+        const q = (search || '').toLowerCase();
+        const nome = (p.nome || '').toLowerCase();
+        const matricula = (p.matricula || '').toLowerCase();
+
+        const matchSearch = !q || nome.includes(q) || matricula.includes(q);
         const matchTurma = !filterTurma || p.turmaId === filterTurma;
         const matchStatus = !filterStatus || p.status === filterStatus;
         return matchSearch && matchTurma && matchStatus;
@@ -205,17 +208,17 @@ export default function ProtagonistsModule({ readOnly = false }: { readOnly?: bo
                 </div>
                 <div className="stat-card green">
                     <span className="stat-card-label">Cursando</span>
-                    <span className="stat-card-value">{protagonistas.filter(p => p.status === 'Cursando').length}</span>
+                    <span className="stat-card-value">{protagonistas.filter(p => (p.status || '') === 'Cursando').length}</span>
                     <CheckCircle size={40} className="stat-card-icon" />
                 </div>
                 <div className="stat-card amber">
                     <span className="stat-card-label">Transferência</span>
-                    <span className="stat-card-value">{protagonistas.filter(p => p.status === 'Transferência').length}</span>
+                    <span className="stat-card-value">{protagonistas.filter(p => (p.status || '') === 'Transferência').length}</span>
                     <AlertCircle size={40} className="stat-card-icon" />
                 </div>
                 <div className="stat-card red">
                     <span className="stat-card-label">Evasão</span>
-                    <span className="stat-card-value">{protagonistas.filter(p => p.status === 'Evasão').length}</span>
+                    <span className="stat-card-value">{protagonistas.filter(p => (p.status || '') === 'Evasão').length}</span>
                     <XCircle size={40} className="stat-card-icon" />
                 </div>
             </div>
