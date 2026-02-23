@@ -144,8 +144,10 @@ export function GradesProvider({ children }: { children: React.ReactNode }) {
             if (!lans.length) return null;
             const sum = lans.reduce((acc, l) => acc + (l?.media ?? 0), 0);
 
-            // Regra: Arredondar para uma casa decimal (ex: 5.54 -> 5.5)
-            const mg = sum / 4;
+            // Regra: Média aritmética simples das notas lançadas até o momento
+            // Se houver menos de 4 lançamentos, divide pelo número de lançamentos para mostrar a média real atual.
+            const divisor = Math.max(1, lans.length);
+            const mg = sum / divisor;
             return Math.floor(mg * 10) / 10;
         }, [lancamentos, disciplinas]);
 

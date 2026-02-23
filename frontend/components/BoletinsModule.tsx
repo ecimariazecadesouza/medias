@@ -138,9 +138,9 @@ export default function BoletinsModule() {
             const b3 = getMedia(p.id, d.id, 3);
             const b4 = getMedia(p.id, d.id, 4);
             const mfValue = getMF(p.id, d.id);
+            const mgValue = getMG(p.id, d.id) || 0;
             const sit = getSituacao(p.id, d.id) || '---';
-            const filled = [b1, b2, b3, b4].filter(x => x !== null) as number[];
-            const mgValue = filled.length > 0 ? filled.reduce((a, b) => a + b, 0) / 4 : 0;
+
             const des = (mfValue ?? mgValue) >= 8 ? 'ÓTIMO' : (mfValue ?? mgValue) >= 6 ? 'BOM' : (mfValue ?? mgValue) >= 5 ? 'REGULAR' : 'INSUFICIENTE';
 
             doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(15, 23, 42);
@@ -339,6 +339,7 @@ export default function BoletinsModule() {
                                         const b3 = getMedia(protagonist.id, d.id, 3);
                                         const b4 = getMedia(protagonist.id, d.id, 4);
                                         const rf = getMedia(protagonist.id, d.id, 5);
+                                        const mg = getMG(protagonist.id, d.id);
                                         const mf = getMF(protagonist.id, d.id);
                                         const sit = getSituacao(protagonist.id, d.id);
                                         return (
@@ -367,8 +368,8 @@ export default function BoletinsModule() {
                                                 <td style={{ padding: '0.875rem 0.5rem', textAlign: 'center', fontWeight: 600, color: situacaoColor(rf) }}>
                                                     {formatMedia(rf)}
                                                 </td>
-                                                <td style={{ padding: '0.875rem 0.75rem', textAlign: 'center', fontWeight: 900, fontSize: '1rem', color: situacaoColor(mf), background: 'hsl(var(--primary)/0.03)' }}>
-                                                    {formatMedia(mf)}
+                                                <td style={{ padding: '0.875rem 0.75rem', textAlign: 'center', fontWeight: 900, fontSize: '1rem', color: situacaoColor(mf || mg), background: 'hsl(var(--primary)/0.03)' }}>
+                                                    {formatMedia(mf || mg)}
                                                 </td>
                                                 <td style={{ padding: '0.875rem 0.75rem', textAlign: 'center', borderRadius: '0 0.5rem 0.5rem 0' }}>
                                                     <span style={{
