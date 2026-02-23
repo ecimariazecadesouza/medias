@@ -28,6 +28,9 @@ EXCEPTION
         IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumtypid = 'user_role'::regtype AND enumlabel = 'Secretaria') THEN
             ALTER TYPE user_role ADD VALUE 'Secretaria';
         END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumtypid = 'user_role'::regtype AND enumlabel = 'CAF') THEN
+            ALTER TYPE user_role ADD VALUE 'CAF';
+        END IF;
 END $$;
 
 create table if not exists profiles (
@@ -201,6 +204,7 @@ begin
     when meta_role = 'Admin' then 'Administrador'::user_role
     when meta_role = 'Docente' then 'Docente'::user_role
     when meta_role = 'Gestor' then 'Gestor'::user_role
+    when meta_role = 'CAF' then 'CAF'::user_role
     when meta_role = 'CP' then 'CP'::user_role
     when meta_role = 'CA' then 'CA'::user_role
     when meta_role = 'Secretaria' then 'Secretaria'::user_role

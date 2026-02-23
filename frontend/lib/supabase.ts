@@ -16,7 +16,7 @@ if (typeof window !== 'undefined' && (isPlaceholder(rawUrl) || isPlaceholder(raw
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export type UserRole = 'Administrador' | 'Docente' | 'Gestor' | 'CP' | 'CA' | 'Secretaria';
+export type UserRole = 'Administrador' | 'Docente' | 'Gestor' | 'CP' | 'CA' | 'Secretaria' | 'CAF';
 
 export interface AuthUser {
     id: string;

@@ -3,7 +3,7 @@
 export type Status = 'Cursando' | 'Evasão' | 'Transferência' | 'Outro';
 export type Turno = 'Manhã' | 'Tarde' | 'Noite' | 'Integral';
 export type Situacao = 'Aprovado' | 'Reprovado' | 'Cursando';
-export type Perfil = 'Administrador' | 'Docente';
+export type Perfil = 'Administrador' | 'Docente' | 'Gestor' | 'CAF';
 
 export interface Formacao {
   id: string;

@@ -88,10 +88,10 @@ function AppShell() {
         const role = user?.role || 'Docente';
         if (role === 'Administrador') return true;
         if (role === 'Docente') {
-          const docenteTabs: TabId[] = ['lancamento', 'analises', 'conselho', 'boletins'];
+          const docenteTabs: TabId[] = ['protagonistas', 'lancamento', 'analises', 'conselho', 'boletins'];
           return docenteTabs.includes(item.id);
         }
-        if (role === 'Gestor') {
+        if (role === 'Gestor' || role === 'CAF') {
           const gestorBlocked: TabId[] = ['configuracoes', 'grade'];
           return !gestorBlocked.includes(item.id);
         }
