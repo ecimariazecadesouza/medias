@@ -292,7 +292,7 @@ function AppShell() {
               {activeTab === 'turmas' && <TurmasModule readOnly={isReadOnly} />}
               {activeTab === 'docentes' && <DocentesModule readOnly={isReadOnly} />}
               {activeTab === 'grade' && <GradeCurricularModule readOnly={isReadOnly} />}
-              {activeTab === 'lancamento' && <LancamentoModule readOnly={isReadOnly} role={user?.role} userEmail={user?.email} />}
+              {activeTab === 'lancamento' && <LancamentoModule readOnly={user?.role !== 'Administrador' && user?.role !== 'Docente'} role={user?.role} userEmail={user?.email} />}
               {activeTab === 'analises' && <AnalysesModule />}
               {activeTab === 'conselho' && <ConselhoModule readOnly={isReadOnly} />}
               {activeTab === 'boletins' && <BoletinsModule />}
